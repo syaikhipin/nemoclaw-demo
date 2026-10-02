@@ -34,6 +34,9 @@ nav .links a:hover{color:var(--text)}
 .btn-ghost{border-color:var(--line);color:var(--text)}
 .btn-ghost:hover{border-color:var(--muted)}
 .hero{padding:88px 0 60px;text-align:center}
+.tagline{display:inline-block;font-size:13px;font-weight:800;letter-spacing:4px;color:var(--green);
+  border:1px solid rgba(74,222,128,.45);border-radius:999px;padding:9px 26px;margin-bottom:26px;
+  background:rgba(74,222,128,.06)}
 .hero h1{font-size:clamp(34px,5.4vw,58px);line-height:1.12;margin:0 0 18px;letter-spacing:-.5px}
 .hero h1 .grad{background:linear-gradient(90deg,var(--green),var(--amber));
   -webkit-background-clip:text;background-clip:text;color:transparent}
@@ -156,7 +159,7 @@ footer a{color:var(--muted)}
 <nav><div class="wrap">
   <a class="brand" href="#">⚡ <b>Reflex</b></a>
   <div class="links">
-    <a href="#demo">Demo</a><a href="#idea">Idea</a><a href="#novelty">Novelty</a>
+    <a href="#demo">Demo</a><a href="#design">Design</a><a href="#idea">Idea</a><a href="#novelty">Novelty</a>
     <a href="#source">Source</a><a href="#try">Try it</a>
     <a href="https://github.com/syaikhipin/nemoclaw-demo">GitHub</a>
   </div>
@@ -164,8 +167,9 @@ footer a{color:var(--muted)}
 
 <div class="wrap">
 <div class="hero">
+  <div class="tagline">CLAW · DISTILL · HAGGLE</div>
   <h1>The agent that finds your <span class="grad">one winning product</span></h1>
-  <p class="sub">Reflex watches what you search for, hunts the price gap between local sourcing and EU prices, and negotiates the deal. An entry for the <b>NVIDIA Claw Agent Challenge</b> (Barcelona).</p>
+  <p class="sub">An <b>arbitrage dropship recommender</b>: Reflex watches what you search for, hunts the price gap between local sourcing and EU prices, and negotiates the deal. An entry for the <b>NVIDIA Claw Agent Challenge</b> (Barcelona).</p>
   <div class="cta">
     <a class="btn btn-green" href="#demo">Watch it work</a>
     <a class="btn btn-ghost" href="https://codespaces.new/syaikhipin/nemoclaw-demo">Open 1-click demo</a>
@@ -207,6 +211,18 @@ footer a{color:var(--muted)}
     <figure><img src="../demo-shots/shot4-draft.png" alt="Supplier search and outreach draft"><figcaption><b>Working the deal.</b> Live supplier search finds the brand's storefront; the agent drafts first outreach (never sent automatically).</figcaption></figure>
     <figure><img src="../demo-shots/shot5-simulation.png" alt="Simulated negotiation transcript"><figcaption><b>The negotiation table.</b> Multi-round rehearsal vs a simulated supplier — $42.50 → $38.25 vs $26.50 → $30.50. No deal; the agent said so honestly.</figcaption></figure>
     <figure><img src="../demo-shots/shot1-header.png" alt="Dashboard header"><figcaption><b>Mission control.</b> Providers, stats, the claw loop, and the safety gate — one screen.</figcaption></figure>
+  </div>
+</section>
+
+<section id="design">
+  <div class="kicker">The design</div>
+  <h2>Four pictures, the whole idea</h2>
+  <p class="lead">The architecture, drawn for humans: the loop, the distillation, the Jev-style typed head, and the haggle.</p>
+  <div class="gallery" style="grid-template-columns:1fr">
+    <figure><img src="images/how-it-works.png" alt="How it works: Claw, Distill, Haggle"><figcaption><b>How it works.</b> One loop, three acts — find the gap, let your taste decide, work the deal.</figcaption></figure>
+    <figure><img src="images/knowledge-distillation.png" alt="Knowledge distillation"><figcaption><b>Knowledge distillation.</b> Espresso from a pot of coffee — a giant teacher plus your labels, compressed into a tiny model that's yours.</figcaption></figure>
+    <figure><img src="images/system-one-design.png" alt="System One design, Jev-style"><figcaption><b>System One, designed like Jev.</b> Small models that speak in types, not prose — every verdict typed, calibrated, auditable.</figcaption></figure>
+    <figure><img src="images/haggle.png" alt="Haggle: the negotiation phase"><figcaption><b>Haggle.</b> Find suppliers, draft outreach, simulate rounds, review terms — with the Noul gate on the money.</figcaption></figure>
   </div>
 </section>
 

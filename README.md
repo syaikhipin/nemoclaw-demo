@@ -1,71 +1,81 @@
-# ⚡ Reflex — the agent that finds your one winning product
+# ⚡ Reflex — Claw · Distill · Haggle
+
+### *An arbitrage dropship recommender*
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/syaikhipin/nemoclaw-demo)
 &nbsp;·&nbsp; 🌐 **[Live site with animated demo →](https://syaikhipin.github.io/nemoclaw-demo/)**
 
 **It watches what you search for, hunts the price gap between local sourcing and EU prices, and negotiates the deal.**
 
-> *The same leather tote costs $12 to source locally and sells for €45 in the EU. That gap is a business — if you can find it before everyone else does. Reflex finds it, checks the math, and works the deal.*
+> *The same leather tote costs $12 to source locally and sells for €45 in the EU. That gap is a business — if you can find it before everyone else does.*
 
 Built for the **NVIDIA Claw Agent Challenge** (Barcelona).
 
 ---
 
-## The idea, in plain words
+## The loop in one picture
 
-Cross-border arbitrage is simple: **buy where it's cheap, sell where it's expensive.** The hard part was never the idea — it's the search. Thousands of products, shifting prices, suppliers to vet, deals to negotiate. One person can't watch it all.
+![How it works: Claw scans, Distill picks, Haggle works the deal](docs/images/how-it-works.png)
 
-So instead of asking you to triage 2,000 products, Reflex flips the job around:
+Three acts, one loop:
 
-1. **It starts from your top searches.** What you keep looking up is your edge — the niche you actually understand. The agent hunts there, not in generic "trending products" lists.
-2. **It scans for the gap.** For products in your space, it compares local sourcing cost against EU retail price and does the margin math.
-3. **It picks the one.** Not a list of fifty maybes — the single best risk-adjusted opportunity.
-4. **It works the deal.** Finds suppliers, drafts first outreach, and rehearses the negotiation against a simulated supplier — so you walk into the real conversation knowing your numbers.
-5. **It never spends your money.** Research, drafts, and simulated deals are all fair game; moving real money needs your explicit approval. *Reflex recommends; it never transacts.*
+- **🟢 CLAW — find the gap.** The agent starts from *your top searches* (your niche, your edge) and watches the market around the clock, computing the margin gap between local sourcing cost and EU retail price.
+- **🟡 DISTILL — your taste decides.** Your deal criteria — margin floor, risk appetite, trusted categories — distilled into a tiny System One model that picks *the one* in 16 milliseconds, for free.
+- **🔵 HAGGLE — work the deal.** Supplier discovery on the live web, drafted first outreach (never sent automatically), and simulated negotiation rounds so you walk in knowing your numbers.
+
+Every morning: a **daily digest** — the one deal worth your attention. *Reflex recommends; it never transacts.*
 
 ---
 
-## The novelty: your deal criteria, distilled
+## The novelty: knowledge distillation, made personal
 
-This is the heart of the entry, and it's easiest to understand through the human brain.
+![Knowledge distillation: teacher + your labels → tiny personal student](docs/images/knowledge-distillation.png)
 
-### Two speeds of thinking
+Think of it like making an **espresso from a pot of coffee**: you keep all the flavor, lose the volume.
 
-Psychologist Daniel Kahneman showed humans think in two systems: **System 1** — fast, instinctive, the gut feeling of an expert who has "seen this a thousand times" — and **System 2** — slow, deliberate, the careful analysis you do before committing money.
+1. **A big AI teaches** (the "teacher" — GLM / Hermes). It drafts preliminary judgments so the system works on day one.
+2. **You teach.** You answer one question — *"would I work this deal?"* — a few hundred times.
+3. **Your labels always win.** Wherever you and the teacher disagree, your verdict overrides. The final model is a **compressed copy of your judgment**, not a smaller copy of the teacher.
+4. **The result is tiny.** It runs on a laptop CPU and judges a candidate in ~16ms — about as fast as you blinking.
 
-Reflex works the same way:
+**Why nobody else has this:** price trackers watch *everyone's* market; review scores aggregate *strangers'* opinions. Reflex learns from **one person's deal history: yours**. Your competitor can buy the same AI subscription — they cannot download your taste. Our literature review found no published personal, on-device decision model trained on a single user's decision history.
 
-| | System One 🟢 | System Two 🔵 |
+---
+
+## System One, designed like Jev: types, not prose
+
+![System One design: typed verdicts like Jev](docs/images/system-one-design.png)
+
+Small models shouldn't ramble. Like [Jev](https://github.com/TianyuCodings)'s typed decision heads, Reflex's System One speaks in **structured verdicts** — the same shape every time, so the agent (and you) can act on it programmatically:
+
+- **Choice:** `shortlist` · `pass` · `research`
+- **Score:** a calibrated probability — "P(you'd work this deal) = 0.94"
+- **Rationale:** which signals mattered most (margin gap, shipping time, …)
+- **Noul:** the safety gate's verdict on the action
+
+Two speeds of thinking (Kahneman's System 1 / System 2), built in:
+
+| | 🟢 System One | 🔵 System Two |
 |---|---|---|
 | **What** | Your distilled deal instinct | A large AI analyst (GLM / Hermes) |
 | **Speed** | ~16 milliseconds | ~10–60 seconds |
 | **Cost** | Free, runs on your laptop | Paid API call |
 | **Handles** | Screening thousands of candidates | Verifying the one opportunity |
 
-The fast gut screens every candidate gap. Only the winner gets escalated to the expensive brain for verification. That's how you watch a whole market without a whole-market AI bill.
+---
 
-### "Distilled" — what does that actually mean?
+## Haggle: rehearse before you spend a cent
 
-Think of it like making an espresso from a pot of coffee: you keep all the flavor, lose the volume.
+![Haggle: find suppliers, draft outreach, simulated rounds, terms for review](docs/images/haggle.png)
 
-1. **You teach.** You answer one simple question — *"would I work this deal?"* — a few hundred times. That's the entire training program.
-2. **A big AI assists** (the "teacher"). Before you've labeled enough, a large model drafts preliminary judgments so the system works on day one.
-3. **Your labels always win.** Wherever you and the teacher disagree, your verdict overrides. This is the crucial part: **the final model is a compressed copy of your judgment, not a smaller copy of the teacher.** Your margin floor, your risk appetite, the categories you trust — distilled into a model no bigger than a photo.
-4. **The result is tiny and fast.** It runs on a laptop CPU and judges a candidate in ~16ms — about as fast as you blinking.
+The negotiation phase, with a safety gate on the money:
 
-### Why nobody else has this
+1. **Find suppliers** — Exa live web search for manufacturers & wholesalers.
+2. **Draft outreach** — GLM writes first contact. Drafts are never sent automatically.
+3. **Simulated rounds** — GLM roleplays the supplier; multi-round back-and-forth on price and volume.
+4. **Terms for review** — proposed terms land in your digest. You decide.
 
-Price trackers watch *everyone's* market. Review scores aggregate *strangers'* opinions. Reflex learns from **one person's deal history: yours**. Your competitor can buy the same AI subscription — they cannot download your taste in deals. In our literature review we found no published personal, on-device decision model trained on a single user's decision history. That's the gap this entry fills.
-
-### Decisions you can audit
-
-Every verdict comes back **typed**, not as a rambling paragraph:
-
-- **Choice:** `shortlist` · `pass` · `research` (needs a closer look)
-- **Score:** a calibrated probability — "P(you'd work this deal) = 0.94"
-- **Rationale:** which signals mattered most (margin gap, shipping time, competition…)
-
-And the **Noul safety gate** sits in front of everything consequential: the agent can research, draft, and negotiate — but it can never move money or commit funds without you.
+This session was real back-and-forth: supplier opened at $42.50/unit defending quality, your side anchored at $26.50 citing competing quotes, and they traded volume-for-price down to $38.25 vs $30.50. **No deal** — the gap was genuine, and the agent said so instead of inventing agreement.
 
 ---
 
@@ -73,33 +83,61 @@ And the **Noul safety gate** sits in front of everything consequential: the agen
 
 Real run, real Amazon products (fashion dataset), live in the browser demo:
 
-**1 · The hunt.** One click scans 24 fresh products, shortlists 22, and escalates 1 to System Two for a closer look. This is the fast gut doing in seconds what used to take an evening of scrolling.
+**The hunt.** One click scans 24 products — 22 shortlisted, 1 escalated to System Two.
 
 ![Triage cycle results](demo-shots/shot2-shortlist.png)
 
-**2 · The pick.** Each candidate gets a calibrated score — P(you'd work this deal) — with a System One/System Two badge showing which brain made the call.
-
-**3 · Working the deal.** For the winner, the agent searches the live web for suppliers — here it found the brand's own storefront — and drafts first-contact outreach. Drafts are never sent automatically.
+**Working the deal.** Live supplier search finds the brand's storefront; the agent drafts first outreach.
 
 ![Supplier search and outreach draft](demo-shots/shot4-draft.png)
 
-**4 · The negotiation table.** The AI roleplays the supplier for multi-round negotiation. This session was real back-and-forth: supplier opened at $42.50/unit defending quality, your side anchored at $26.50 citing competing quotes, and they traded volume-for-price down to $38.25 vs $30.50. No deal — the gap was genuine, and the agent said so instead of inventing agreement. That's the rehearsal before you spend a cent.
+**The negotiation table.** The full simulated transcript.
 
 ![Simulated negotiation transcript](demo-shots/shot5-simulation.png)
 
-**5 · Talk to the claw.** The deep agent (scout → judge → analyst subagents) takes plain-English instructions: *"scan 4 fresh products, judge them, find suppliers for your top pick and draft outreach."* It did — then noted, unprompted, that no money moved so no safety approval was needed.
+**Talk to the claw.** The deep agent (scout → judge → analyst subagents) takes plain-English instructions: *"scan 4 fresh products, judge them, find suppliers for your top pick and draft outreach."* It did — then noted, unprompted, that no money moved so no safety approval was needed.
+
+---
+
+## Configuration — one `.env` does everything
+
+Copy `.env.example` to `.env`. Every LLM provider is **OpenAI-compatible** — just `BASE_URL` + `API_KEY` + `MODEL`. Point them at any compatible endpoint (custom proxy, local server, another vendor) with zero code changes.
+
+```bash
+# --- LLM providers (OpenAI-compatible: base URL + key + model) ---
+GLM_API_KEY=            # primary: GLM on z.ai (free at https://z.ai)
+GLM_BASE_URL=https://api.z.ai/api/coding/paas/v4
+GLM_MODEL=glm-5.3-flash
+
+NVIDIA_API_KEY=         # fallback: NVIDIA NIM (free at https://build.nvidia.com)
+NIM_MODEL=nousresearch/hermes-3-llama-3.1-70b
+NIM_BASE_URL=https://integrate.api.nvidia.com/v1
+
+# --- Supplier search (Haggle phase) ---
+EXA_API_KEY=            # live web search (free at https://exa.ai)
+SEARXNG_URL=            # optional local SearXNG fallback
+
+# --- Behaviour ---
+REFLEX_OFFLINE=0        # =1: deterministic offline stand-ins, no keys needed
+REFLEX_HOME=~/.reflex   # SQLite memory, trained head, digests live here
+REFLEX_SHORTLIST_AT=0.65
+REFLEX_PASS_BELOW=0.35
+REFLEX_SCAN_LIMIT=40
+```
+
+Provider priority is automatic: **GLM → NVIDIA NIM → offline**. No keys at all? Set `REFLEX_OFFLINE=1` and the whole demo runs on scripted stand-ins.
 
 ---
 
 ## Try it yourself
 
-**One click, no setup:** [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/syaikhipin/nemoclaw-demo) — the dashboard starts automatically in offline demo mode; add free `GLM_API_KEY` / `EXA_API_KEY` as Codespaces secrets and rebuild for the live version.
+**One click, no setup:** [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/syaikhipin/nemoclaw-demo) — the dashboard starts automatically in offline demo mode; add `GLM_API_KEY` / `EXA_API_KEY` as Codespaces secrets and rebuild for the live version.
 
 **Or locally:**
 
 ```bash
 git clone https://github.com/syaikhipin/nemoclaw-demo.git && cd nemoclaw-demo
-bash nemoclaw/scripts/onboard.sh     # creates venv, installs dependencies
+bash nemoclaw/scripts/onboard.sh     # creates venv, installs dependencies, copies .env.example → .env
 bash nemoclaw/scripts/install.sh     # trains the demo head, runs the test suite
 
 # web demo (the screenshots above)
@@ -108,8 +146,6 @@ GLM_API_KEY=your-key EXA_API_KEY=your-key \
 # open http://localhost:8765
 ```
 
-Keys are free: GLM at [z.ai](https://z.ai), Exa at [exa.ai](https://exa.ai). Without keys, everything still runs in offline demo mode (`REFLEX_OFFLINE=1`).
-
 Make it *yours* — this is where the magic happens:
 
 ```bash
@@ -117,7 +153,7 @@ Make it *yours* — this is where the magic happens:
 .venv/bin/python -m scripts.retrain    # your labels always beat the teacher's
 ```
 
-Your deal criteria live in `labeling-config.yaml` (EU market, margin-gap rubric) — correct any line and it becomes v2.
+Your deal criteria live in `labeling-config.yaml` (EU market, margin-gap rubric) — correct any line and it becomes the next version.
 
 ---
 
@@ -139,11 +175,12 @@ Your deal criteria live in `labeling-config.yaml` (EU market, margin-gap rubric)
 | `reflex/noul.py` | Safety gate: talk allowed, money movement blocked |
 | `reflex/memory.py` | Durable SQLite memory: products, judgments, labels, negotiations, runs |
 | `reflex/web/` | The browser demo dashboard |
+| `docs/` | GitHub Pages site (`index.html`) + architecture diagrams (`images/`) |
+| `.devcontainer/` | 1-click GitHub Codespaces setup |
 | `skills/reflex-triage/` | OpenClaw/Hermes skill definition |
 | `nemoclaw/scripts/` | `onboard` / `install` / `start` (OpenClaw cron for 24/7) |
 | `scripts/` | `bootstrap`, `label`, `retrain`, `run`, `fetch_amazon_data` |
 | `eval/` | Held-out evaluation: accuracy, calibration, abstention, latency |
-| `docs/` | Labeling protocol · Qwen3-0.6B (CLM/NanoJev) upgrade path |
 
 **Product data:** real Amazon fashion products (the dataset behind [qdrant-labs/demo-ecommerce-search](https://github.com/qdrant-labs/demo-ecommerce-search), 40k-slice via `scripts/fetch_amazon_data.py`). Titles, prices, ratings, images are real; sourcing cost and shipping days are deterministic documented estimates.
 
