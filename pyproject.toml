@@ -1,0 +1,29 @@
+[project]
+name = "reflex"
+version = "0.1.0"
+description = "Reflex — a long-running claw agent that triages dropshipping products with a personal System One decision model (NVIDIA Claw Agent Challenge, Barcelona)."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Apache-2.0" }
+dependencies = [
+    "deepagents>=0.7",
+    "langchain-openai>=0.3",
+    "scikit-learn>=1.4",
+    "pandas>=2.0",
+    "numpy>=1.26",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+reflex-run = "scripts.run:main"
+reflex-label = "scripts.label:main"
+reflex-bootstrap = "scripts.bootstrap:main"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["reflex*"]
