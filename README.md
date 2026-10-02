@@ -1,153 +1,145 @@
-# Reflex
+# ⚡ Reflex — your taste, distilled into an AI buyer
 
-**A long-running claw agent that triages dropshipping products with a personal
-System One decision model — your taste, distilled, running 24/7.**
+**A long-running claw agent that triages products the way *you* would — because it learned from your decisions.**
 
-One sentence: *Reflex learns which products **you** would sell from your own
-past decisions, then scans product feeds around the clock and hands you a
-shortlist — so you vet 20 winners instead of drowning in 2,000 listings.*
+> *An independent seller faces 2,000 new products a week and can seriously evaluate maybe 20. Reflex learns which 20 you'd pick, watches the feeds around the clock, and hands you a shortlist every morning — then helps you negotiate with suppliers.*
 
-Built for the **NVIDIA Claw Agent Challenge** (Barcelona) on the official stack:
-**NemoClaw** quickstart layout · **OpenClaw** skill + cron · **Hermes** via NVIDIA NIM ·
-**LangChain Deep Agents** harness.
+Built for the **NVIDIA Claw Agent Challenge** (Barcelona).
 
-## How it works
+---
 
-```
-                    ┌─────────────────────────────────────────┐
-  product feeds ──▶ │  SCOUT subagent: scan_products          │  Deep Agents
-                    │        │                                │  harness
-                    │        ▼                                │  (planning,
-                    │  JUDGE: System One head ──▶ shortlist ──┤   subagents,
-                    │    (personal, <50ms, free)      │       │   tools, memory)
-                    │        │ research (uncertain)   │ pass  │
-                    │        ▼                       │       │
-                    │  ANALYST subagent: System Two ──┘       │
-                    │    (Hermes 3 on NVIDIA NIM)             │
-                    │        │                                │
-                    │        ▼                                │
-                    │  NOUL gate: blocks money movement  ✋    │
-                    └─────────────────────────────────────────┘
-                                   │ digest every 6h
-                                   ▼
-                          owner vets the shortlist,
-                    feedback ──▶ becomes training data ──▶ head retrains
+## The problem, in plain words
 
-  NEGOTIATION PHASE (on shortlisted products):
-  find_suppliers (Exa web search) → draft_outreach (GLM draft, never sent)
-  → simulate (GLM roleplays the supplier, multi-round) → proposed terms
-  ──▶ owner approves ──▶ Noul still blocks any money movement
-```
+Selling online is a curation game. Thousands of products launch daily; winners are found by sifting. Big sellers hire buyers to do the sifting. Independent sellers do it at midnight, alone, scrolling until their eyes blur.
 
-**The core idea:** dual-process triage. System One — a small model distilled
-from *your* "would I sell this?" labels — decides ~97% of products in
-milliseconds for free. Only the uncertain ~3% escalate to System Two (Hermes 3
-via NVIDIA's free NIM endpoint). It's the FrugalGPT-cascade insight, but the
-cheap tier is *personal*: no generic model knows your taste.
+Generic AI doesn't fix this: it doesn't know **your** taste — your margins, your customers, your gut feeling about what sells. Ask ten sellers "would you sell this?" and you'll get ten different answers. Taste is personal. So we stopped trying to build a smarter generic judge, and built something else:
 
-**Typed decisions** (Choice / Score / Noul), à la the Jev ecosystem: every
-judgment carries `choice` (shortlist/pass/research), a calibrated `score`, and
-passes the Noul safety gate — the agent recommends, it never transacts.
+**A junior buyer who shadows you, learns your taste from your own past decisions, and then pre-screens everything — in milliseconds, for free.**
 
-## Verified on this machine
+---
 
-```
-$ .venv/bin/python -m scripts.bootstrap
-[bootstrap] trained on 300 labels (train acc 0.997)
-[bootstrap] held-out eval (n=100):
-  accuracy: 0.91 | ece: 0.079 | abstention_rate_research: 0.03
-  decided_without_llm: 0.97 | mean_latency_ms: 16.0 | p99_latency_ms: 42.4
-$ .venv/bin/python -m pytest tests/ -q
-7 passed
-```
+## The novelty: a distilled System One model
 
-(Seed labels are a documented synthetic persona — a stand-in so the repo runs
-offline. The model becomes personal when trained on the owner's labels.)
+This is the heart of the entry, and it's easiest to understand through the human brain.
 
-## Quickstart
+### Two speeds of thinking
 
-```bash
-git clone <this-repo> && cd reflex
-bash nemoclaw/scripts/onboard.sh    # venv + deps + .env
-bash nemoclaw/scripts/install.sh    # trains demo head, runs tests
-.venv/bin/python -m scripts.run --limit 40      # one triage cycle
-.venv/bin/python -m scripts.run --forever --interval-hours 6  # the claw, 24/7
-```
+Psychologist Daniel Kahneman showed humans think in two systems: **System 1** — fast, instinctive, the gut feeling of an expert who has "seen this a thousand times" — and **System 2** — slow, deliberate, the careful analysis you do for hard calls.
 
-With an LLM key in `.env`, System Two and the deep agent use it; without one,
-everything runs offline.
+Reflex works the same way:
 
-| Provider | Env | Model |
+| | System One 🟢 | System Two 🔵 |
 |---|---|---|
-| **GLM (z.ai)** — primary for now | `GLM_API_KEY` | `glm-5.3-flash` (`GLM_MODEL`, `GLM_BASE_URL`) |
-| **NVIDIA NIM** — later | `NVIDIA_API_KEY` | `nousresearch/hermes-3-llama-3.1-70b` |
-| Offline demo | `REFLEX_OFFLINE=1` | scripted stand-in (no network, no key) |
+| **What** | Your distilled taste | A large AI analyst (GLM / Hermes) |
+| **Speed** | ~16 milliseconds | ~10–60 seconds |
+| **Cost** | Free, runs on your laptop | Paid API call |
+| **Handles** | ~97% of products | The ~3% uncertain ones |
 
-**Product source:** real Amazon fashion products — the dataset behind
-[qdrant-labs/demo-ecommerce-search](https://github.com/qdrant-labs/demo-ecommerce-search)
-(McAuley-Lab/Amazon-Reviews-2023, 5.8M products; the demo streams a 40k slice).
-Fetch it with `.venv/bin/python -m scripts.fetch_amazon_data`. Titles, prices,
-ratings, images and categories are real; sourcing cost and shipping days are
-deterministic synthetic estimates (documented in `reflex/sources/amazon_fashion.py`).
+The fast gut screens everything. Only the genuinely hard calls get escalated to the expensive brain. That's how you triage thousands of products without a thousand-dollar AI bill.
 
-**Negotiation:** supplier discovery uses the **Exa API** (`EXA_API_KEY`;
-local SearXNG via `SEARXNG_URL` as fallback). The agent finds manufacturers,
-drafts outreach (never sent), and can run a simulated multi-round negotiation
-where GLM roleplays the supplier. Noul allows negotiation talk — it still
-blocks anything that moves money.
+### "Distilled" — what does that actually mean?
 
-## Web demo
+Think of it like making an espresso from a pot of coffee: you keep all the flavor, lose the volume.
+
+1. **You teach.** You answer one simple question — *"would I sell this?"* — a few hundred times (pilot) up to a few thousand (pro). That's the entire training program.
+2. **A big AI assists** (the "teacher"). Before you've labeled enough, a large model drafts preliminary judgments so the system works on day one.
+3. **Your labels always win.** Wherever you and the teacher disagree, your verdict overrides. This is the crucial part: **the final model is a compressed copy of your judgment, not a smaller copy of the teacher.**
+4. **The result is tiny.** The distilled model is small enough to run on a laptop CPU, judging a product in ~16ms — about as fast as you blinking.
+
+### Why nobody else has this
+
+Product recommenders learn from *everyone's* clicks. Review scores aggregate *strangers'* opinions. Reflex learns from **one person's decisions: yours**. Your competitor can buy the same AI subscription you have — they cannot download your taste. In our literature review we found no published personal, on-device decision model trained on a single user's decision history. That's the gap this entry fills.
+
+### Decisions you can audit
+
+Every judgment comes back **typed**, not as a rambling paragraph:
+
+- **Choice:** `shortlist` · `pass` · `research` (needs a closer look)
+- **Score:** a calibrated probability — "P(you'd sell this) = 0.94"
+- **Rationale:** which signals mattered most (margin, shipping speed, reviews…)
+
+And the **Noul safety gate** sits in front of everything: the agent can research, draft, and negotiate — but it can never move money or commit funds without you. *Reflex recommends; it never transacts.*
+
+---
+
+## Watch it work
+
+Real run, real Amazon products (fashion dataset), live in the browser demo:
+
+**1 · One click runs a triage cycle.** 24 products scanned, 22 shortlisted, 1 escalated to System Two for a closer look.
+
+![Triage cycle results](demo-shots/shot2-shortlist.png)
+
+**2 · Pick a winner and enter the negotiation phase.** Supplier discovery searches the live web for manufacturers — here it found the brand's own storefront.
+
+![Supplier search and outreach draft](demo-shots/shot4-draft.png)
+
+**3 · The deal table.** The AI roleplays the supplier for multi-round negotiation. This session was real back-and-forth: supplier opened at $42.50/unit defending quality, your side anchored at $26.50 citing competing quotes, and they traded volume-for-price down to $38.25 vs $30.50. No deal — the gap was genuine, and the agent said so instead of inventing agreement.
+
+![Simulated negotiation transcript](demo-shots/shot5-simulation.png)
+
+**4 · Talk to the claw.** The deep agent (scout → judge → analyst subagents) takes plain-English instructions: *"scan 4 fresh products, judge them, find suppliers for your top pick and draft outreach."* It did — then noted, unprompted, that no money moved so no safety approval was needed.
+
+---
+
+## Try it yourself
 
 ```bash
-GLM_API_KEY=... .venv/bin/python -m reflex.web.app --port 8765
+git clone https://github.com/syaikhipin/nemoclaw-demo.git && cd nemoclaw-demo
+bash nemoclaw/scripts/onboard.sh     # creates venv, installs dependencies
+bash nemoclaw/scripts/install.sh     # trains the demo head, runs the test suite
+
+# web demo (the screenshots above)
+GLM_API_KEY=your-key EXA_API_KEY=your-key \
+  .venv/bin/python -m reflex.web.app --port 8765
 # open http://localhost:8765
 ```
 
-The dashboard runs live triage cycles, shows the shortlist with P(sell) bars and
-System One / System Two badges, lets you test the Noul gate, chat with the deep
-agent (scout → judge → analyst subagents, powered by GLM), read the latest
-digest, and see the held-out eval metrics.
+Keys are free: GLM at [z.ai](https://z.ai), Exa at [exa.ai](https://exa.ai). Without keys, everything still runs in offline demo mode (`REFLEX_OFFLINE=1`).
 
-Make it yours:
+Make it *yours* — this is where the magic happens:
+
 ```bash
-.venv/bin/python -m scripts.label    # "would I sell this?" — 300 for the pilot
-.venv/bin/python -m scripts.retrain  # your labels always beat teacher labels
+.venv/bin/python -m scripts.label      # "would I sell this?" — 300 for the pilot
+.venv/bin/python -m scripts.retrain    # your labels always beat the teacher's
 ```
 
-## Layout
+---
+
+## Under the hood (for the technical reader)
+
+**Stack:** NemoClaw recipe layout · OpenClaw skill + cron · GLM (z.ai) primary, Hermes via NVIDIA NIM next · LangChain Deep Agents harness (`create_deep_agent`, scout/judge/analyst subagents, 6+ tools) · Exa for supplier search · SQLite memory.
+
+**Verified numbers** (held-out set, n=100): accuracy **0.91**, calibration error **0.079**, **97%** of products decided with zero LLM calls, p99 latency **42ms**. Test suite: **7/7 green.**
+
+**Repo layout:**
 
 | Path | What |
 |---|---|
-| `reflex/system_one/` | Personal decision head (Protocol + sklearn reference + distillation) |
-| `reflex/system_two/` | Hermes-via-NIM analyst, offline fallback |
-| `reflex/deepagent/` | `create_deep_agent` wiring: model, 6 tools, scout/judge/analyst subagents |
-| `reflex/serve/` | Long-running claw loop (scan→judge→escalate→digest) |
-| `reflex/noul.py` | Safety gate: blocks money movement, always |
-| `reflex/memory.py` | SQLite memory: products, judgments, labels, runs |
-| `skills/reflex-triage/` | OpenClaw/Hermes skill (NemoClaw recipe style) |
-| `nemoclaw/scripts/` | onboard / install / start (OpenClaw cron) |
-| `scripts/` | bootstrap, label, retrain, run |
-| `eval/` | held-out eval: accuracy, calibration, abstention, latency |
-| `docs/` | labeling protocol, Qwen3-0.6B (CLM/NanoJev) upgrade path |
+| `reflex/system_one/` | The distilled head — `DecisionHead` protocol + calibrated reference model + teacher-distillation pipeline |
+| `reflex/system_two/` | Slow analyst (GLM → Hermes/NIM → offline fallback) |
+| `reflex/negotiation/` | Exa supplier search, GLM outreach drafts, simulated multi-round negotiation |
+| `reflex/deepagent/` | Deep-agents harness: model selection, tools, subagent prompts |
+| `reflex/serve/` | The long-running claw loop (scan → judge → escalate → digest) |
+| `reflex/noul.py` | Safety gate: talk allowed, money movement blocked |
+| `reflex/memory.py` | Durable SQLite memory: products, judgments, labels, negotiations, runs |
+| `reflex/web/` | The browser demo dashboard |
+| `skills/reflex-triage/` | OpenClaw/Hermes skill definition |
+| `nemoclaw/scripts/` | `onboard` / `install` / `start` (OpenClaw cron for 24/7) |
+| `scripts/` | `bootstrap`, `label`, `retrain`, `run`, `fetch_amazon_data` |
+| `eval/` | Held-out evaluation: accuracy, calibration, abstention, latency |
+| `docs/` | Labeling protocol · Qwen3-0.6B (CLM/NanoJev) upgrade path |
 
-## Why this wins
+**Product data:** real Amazon fashion products (the dataset behind [qdrant-labs/demo-ecommerce-search](https://github.com/qdrant-labs/demo-ecommerce-search), 40k-slice via `scripts/fetch_amazon_data.py`). Titles, prices, ratings, images are real; sourcing cost and shipping days are deterministic documented estimates.
 
-1. **It actually runs** — end-to-end pipeline, long-running loop, tools, durable
-   memory, 7/7 tests green, real eval numbers, not a one-shot prompt.
-2. **It's novel** — nobody has published a *personal* on-device System One model
-   trained on one user's decision history; the literature review confirmed the gap.
-   Personal taste as a distilled decision layer is the moat.
-3. **It's useful** — independent sellers drown in feeds; a triage layer that learns
-   *your* criteria and cuts vetting from thousands of listings to a daily shortlist
-   is something a person acts on every morning.
+---
 
 ## Honest limits
-- Seed labels are synthetic; swap in real labels via `scripts/label.py` before judging.
-- Amazon cost/shipping fields are deterministic estimates, not observed data.
-- Negotiation drafts and simulations move no money and contact nobody; Noul
-  blocks real transactions until the owner approves.
-- The reference head is sklearn-on-CPU by design (trains in seconds anywhere);
-  the Qwen3-0.6B typed head path (CLM primary, NanoJev baseline) is specified in
-  `docs/clm-head.md` and swaps in via the `DecisionHead` protocol.
 
-License: Apache-2.0
+- The demo head trains on a synthetic persona's labels; it becomes *personal* only after you label (~300 pilot, 1–3k for pro).
+- Negotiation drafts and simulations contact nobody and move no money — Noul blocks real transactions until you approve.
+- The reference head is CPU-friendly by design (trains in seconds anywhere); the Qwen3-0.6B typed-head path (CLM primary, NanoJev baseline) is specified in `docs/clm-head.md` and swaps in via the `DecisionHead` protocol.
+
+---
+
+*Reflex recommends; it never transacts.* · License: Apache-2.0
