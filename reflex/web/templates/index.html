@@ -103,7 +103,7 @@ only the uncertain ones escalate to System Two. The Noul gate blocks money movem
 </div>
 
 <div class="panel">
-  <h2>4 · Negotiation phase <span class="hint">(Exa supplier search → GLM outreach draft → simulated deal table)</span></h2>
+  <h2>4 · Negotiation phase <span class="hint">(Exa supplier search → LLM outreach draft → simulated deal table)</span></h2>
   <div class="row">
     <input type="text" id="negProduct" placeholder="product id (e.g. amz-B09X1MRDN6) — or run a cycle first and use the top shortlist pick">
     <button class="ghost" onclick="findSuppliers()">1 · Find suppliers</button>
@@ -218,7 +218,7 @@ async function findSuppliers() {
 async function draftOutreach() {
   const pid = document.getElementById('negProduct').value.trim();
   const st = document.getElementById('negStatus'), out = document.getElementById('negOut');
-  st.textContent = 'drafting outreach with GLM…';
+  st.textContent = 'drafting outreach with the LLM…';
   const r = await fetch('/api/negotiate/draft', {method:'POST',
     headers:{'Content-Type':'application/json'},
     body: JSON.stringify({product_id: pid, supplier: negSupplier})});
@@ -229,7 +229,7 @@ async function draftOutreach() {
 async function simulateNeg() {
   const pid = document.getElementById('negProduct').value.trim();
   const st = document.getElementById('negStatus'), out = document.getElementById('negOut');
-  st.textContent = 'simulating negotiation rounds (GLM plays the supplier)… this takes ~1 min';
+  st.textContent = 'simulating negotiation rounds (the LLM plays the supplier)… this takes ~1 min';
   out.innerHTML = '';
   try {
     const r = await fetch('/api/negotiate/simulate', {method:'POST',

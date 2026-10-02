@@ -247,7 +247,7 @@ footer a{color:var(--muted)}
   <p class="lead">Psychologist Daniel Kahneman showed humans think in two systems — fast instinct, slow analysis. Reflex is built the same way. The fast one is the breakthrough: a tiny model that is a compressed copy of <i>your</i> judgment. Like espresso from a pot of coffee — all the flavor, none of the volume.</p>
   <table class="duo">
     <tr><th></th><th>🟢 System One</th><th>🔵 System Two</th></tr>
-    <tr><td>What</td><td>Your distilled deal instinct</td><td>A large AI analyst (GLM / Hermes)</td></tr>
+    <tr><td>What</td><td>Your distilled deal instinct</td><td>A large AI analyst (your OpenAI-compatible LLM)</td></tr>
     <tr><td>Speed</td><td>~16 milliseconds</td><td>~10–60 seconds</td></tr>
     <tr><td>Cost</td><td>Free, runs on your laptop</td><td>Paid API call</td></tr>
     <tr><td>Handles</td><td>Screening thousands of candidates</td><td>Verifying the one opportunity</td></tr>
@@ -261,7 +261,7 @@ footer a{color:var(--muted)}
   <p class="lead">The full repo is MIT-style open. Two pieces carry the whole design:</p>
   <div class="tree">reflex/
 ├── system_one/      <span class="c"># the distilled head — DecisionHead protocol</span>
-├── system_two/      <span class="c"># slow analyst: GLM → Hermes/NIM → offline</span>
+├── system_two/      <span class="c"># slow analyst: OpenAI-compatible → Hermes/NIM → offline</span>
 ├── negotiation/     <span class="c"># Exa supplier search, drafts, simulated rounds</span>
 ├── deepagent/       <span class="c"># scout / judge / analyst subagents + tools</span>
 ├── serve/           <span class="c"># the 24/7 claw loop (scan → judge → digest)</span>
@@ -312,11 +312,11 @@ def check(action: str) -> NoulVerdict:
   <h2>One click to a live demo</h2>
   <div class="try">
     <div>
-      <p class="lead">Spin up the whole thing in your browser — no local setup. The dashboard starts automatically in offline demo mode; add your free GLM + Exa keys as Codespaces secrets and it goes live.</p>
+      <p class="lead">Spin up the whole thing in your browser — no local setup. The dashboard starts automatically in offline demo mode; add your OPENAI_API_KEY + EXA_API_KEY as Codespaces secrets and it goes live.</p>
       <p><a href="https://codespaces.new/syaikhipin/nemoclaw-demo"><img src="https://github.com/codespaces/badge.svg" alt="Open in GitHub Codespaces"></a></p>
       <p class="lead" style="margin-bottom:0">Prefer local? <a href="https://github.com/syaikhipin/nemoclaw-demo#try-it-yourself">Quickstart in the README</a> — three commands to the dashboard.</p>
     </div>
-<pre>GLM_API_KEY=your-key EXA_API_KEY=your-key \
+<pre>OPENAI_API_KEY=your-key EXA_API_KEY=your-key \
   .venv/bin/python -m reflex.web.app --port 8765
 # → http://localhost:8765</pre>
   </div>

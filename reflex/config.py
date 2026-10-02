@@ -18,10 +18,12 @@ class Settings:
     nvidia_api_key: str = os.environ.get("NVIDIA_API_KEY", "")
     nim_model: str = os.environ.get("NIM_MODEL", "nousresearch/hermes-3-llama-3.1-70b")
     nim_base_url: str = os.environ.get("NIM_BASE_URL", "https://integrate.api.nvidia.com/v1")
-    # GLM (z.ai) — primary LLM provider for now; NVIDIA NIM later.
-    glm_api_key: str = os.environ.get("GLM_API_KEY", "")
-    glm_base_url: str = os.environ.get("GLM_BASE_URL", "https://api.z.ai/api/coding/paas/v4")
-    glm_model: str = os.environ.get("GLM_MODEL", "glm-5.3-flash")
+    # OpenAI-compatible LLM — primary provider. Point at ANY OpenAI-compatible
+    # endpoint (custom proxy, local server, another vendor); legacy GLM_* vars
+    # are still honored as a fallback so old setups keep working.
+    openai_api_key: str = os.environ.get("OPENAI_API_KEY") or os.environ.get("GLM_API_KEY", "")
+    openai_base_url: str = os.environ.get("OPENAI_BASE_URL") or os.environ.get("GLM_BASE_URL", "https://api.openai.com/v1")
+    openai_model: str = os.environ.get("OPENAI_MODEL") or os.environ.get("GLM_MODEL", "gpt-4o-mini")
     # Exa (web search) — supplier discovery for negotiation.
     exa_api_key: str = os.environ.get("EXA_API_KEY", "")
     searxng_url: str = os.environ.get("SEARXNG_URL", "")
@@ -43,8 +45,8 @@ class Settings:
         self.digest_dir.mkdir(parents=True, exist_ok=True)
 
     @property
-    def has_glm(self) -> bool:
-        return bool(self.glm_api_key) and not self.offline
+    def has_openai(self) -> bool:
+        return bool(self.openai_api_key) and not self.offline
 
     @property
     def has_nim(self) -> bool:
@@ -52,9 +54,9 @@ class Settings:
 
     @property
     def llm_provider(self) -> str:
-        """Provider priority: GLM first, NVIDIA NIM later, offline last."""
-        if self.has_glm:
-            return f"glm:{self.glm_model}"
+        """Provider priority: OpenAI-compatible endpoint first, NVIDIA NIM later, offline last."""
+        if self.has_openai:
+            return f"openai:{self.openai_model}"
         if self.has_nim:
             return f"nim:{self.nim_model}"
         return "offline"

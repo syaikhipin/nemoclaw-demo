@@ -2,8 +2,8 @@
 
 Pipeline:
   1. find_suppliers(product)  — Exa/SearXNG web search for manufacturers/wholesalers
-  2. draft_outreach(product, supplier) — GLM drafts the first-contact message (DRAFT ONLY)
-  3. simulate(product, supplier, target) — GLM roleplays the supplier for N rounds;
+  2. draft_outreach(product, supplier) — the LLM drafts the first-contact message (DRAFT ONLY)
+  3. simulate(product, supplier, target) — the LLM roleplays the supplier for N rounds;
      ends with proposed terms. Clearly labeled SIMULATED — no real contact happens.
 
 Safety: drafting and simulating are allowed. Anything that moves money or
@@ -68,7 +68,7 @@ def draft_outreach(product: Product, supplier: dict,
 
 def simulate(product: Product, supplier: dict, target_unit_price: float,
              rounds: int = 3, settings: Settings | None = None) -> dict:
-    """Simulated negotiation: GLM plays the supplier, our negotiator plays buyer."""
+    """Simulated negotiation: the LLM plays the supplier, our negotiator plays buyer."""
     from ..config import SETTINGS
     settings = settings or SETTINGS
     transcript: list[dict] = []

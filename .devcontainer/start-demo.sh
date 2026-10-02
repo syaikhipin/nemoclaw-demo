@@ -4,9 +4,9 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-if [ -z "${GLM_API_KEY:-}" ]; then
+if [ -z "${OPENAI_API_KEY:-}" ]; then
   export REFLEX_OFFLINE=1
-  MODE="offline demo mode (no API keys — add GLM_API_KEY / EXA_API_KEY as Codespaces secrets for live)"
+  MODE="offline demo mode (no API keys — add OPENAI_API_KEY / EXA_API_KEY as Codespaces secrets for live)"
 else
   MODE="live mode"
 fi

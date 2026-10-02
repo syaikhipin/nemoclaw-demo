@@ -1,6 +1,6 @@
-"""LLM chat helpers over the provider chain: GLM (z.ai) -> NVIDIA NIM -> offline.
+"""LLM chat helpers over the provider chain: OpenAI-compatible endpoint -> NVIDIA NIM -> offline.
 
-Keys come from the environment only (GLM_API_KEY / NVIDIA_API_KEY) and are
+Keys come from the environment only (OPENAI_API_KEY / NVIDIA_API_KEY) and are
 never written anywhere. Used by negotiation and anywhere else the agent needs
 free-form model text (not just the System Two analyst).
 
@@ -73,14 +73,14 @@ def _offline_chat(messages: list[dict]) -> str:
             return _offline_draft(user)
         return _offline_buyer_turn(user)
     return ("[offline stand-in] No LLM provider configured (REFLEX_OFFLINE=1). "
-            "Set GLM_API_KEY or NVIDIA_API_KEY for live responses.")
+            "Set OPENAI_API_KEY or NVIDIA_API_KEY for live responses.")
 
 
 def _providers(settings: Settings):
     if settings.offline:
         return
-    if settings.glm_api_key:
-        yield ("glm", settings.glm_base_url, settings.glm_api_key, settings.glm_model)
+    if settings.openai_api_key:
+        yield ("openai", settings.openai_base_url, settings.openai_api_key, settings.openai_model)
     if settings.nvidia_api_key:
         yield ("nim", settings.nim_base_url, settings.nvidia_api_key, settings.nim_model)
 

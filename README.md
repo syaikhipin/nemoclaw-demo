@@ -34,7 +34,7 @@ Every morning: a **daily digest** — the one deal worth your attention. *Reflex
 
 Think of it like making an **espresso from a pot of coffee**: you keep all the flavor, lose the volume.
 
-1. **A big AI teaches** (the "teacher" — GLM / Hermes). It drafts preliminary judgments so the system works on day one.
+1. **A big AI teaches** (the "teacher" — your OpenAI-compatible LLM). It drafts preliminary judgments so the system works on day one.
 2. **You teach.** You answer one question — *"would I work this deal?"* — a few hundred times.
 3. **Your labels always win.** Wherever you and the teacher disagree, your verdict overrides. The final model is a **compressed copy of your judgment**, not a smaller copy of the teacher.
 4. **The result is tiny.** It runs on a laptop CPU and judges a candidate in ~16ms — about as fast as you blinking.
@@ -58,7 +58,7 @@ Two speeds of thinking (Kahneman's System 1 / System 2), built in:
 
 | | 🟢 System One | 🔵 System Two |
 |---|---|---|
-| **What** | Your distilled deal instinct | A large AI analyst (GLM / Hermes) |
+| **What** | Your distilled deal instinct | A large AI analyst (your OpenAI-compatible LLM) |
 | **Speed** | ~16 milliseconds | ~10–60 seconds |
 | **Cost** | Free, runs on your laptop | Paid API call |
 | **Handles** | Screening thousands of candidates | Verifying the one opportunity |
@@ -72,8 +72,8 @@ Two speeds of thinking (Kahneman's System 1 / System 2), built in:
 The negotiation phase, with a safety gate on the money:
 
 1. **Find suppliers** — Exa live web search for manufacturers & wholesalers.
-2. **Draft outreach** — GLM writes first contact. Drafts are never sent automatically.
-3. **Simulated rounds** — GLM roleplays the supplier; multi-round back-and-forth on price and volume.
+2. **Draft outreach** — the LLM writes first contact. Drafts are never sent automatically.
+3. **Simulated rounds** — the LLM roleplays the supplier; multi-round back-and-forth on price and volume.
 4. **Terms for review** — proposed terms land in your digest. You decide.
 
 This session was real back-and-forth: supplier opened at $42.50/unit defending quality, your side anchored at $26.50 citing competing quotes, and they traded volume-for-price down to $38.25 vs $30.50. **No deal** — the gap was genuine, and the agent said so instead of inventing agreement.
@@ -108,9 +108,9 @@ Copy `.env.example` to `.env`. Every LLM provider is **OpenAI-compatible** — j
 
 ```bash
 # --- LLM providers (OpenAI-compatible: base URL + key + model) ---
-GLM_API_KEY=            # primary: GLM on z.ai (free at https://z.ai)
-GLM_BASE_URL=https://api.z.ai/api/coding/paas/v4
-GLM_MODEL=glm-5.3-flash
+OPENAI_API_KEY=         # primary: your custom OpenAI-compatible endpoint
+OPENAI_BASE_URL=https://api.openai.com/v1
+OPENAI_MODEL=gpt-4o-mini
 
 NVIDIA_API_KEY=         # fallback: NVIDIA NIM (free at https://build.nvidia.com)
 NIM_MODEL=nousresearch/hermes-3-llama-3.1-70b
@@ -128,13 +128,13 @@ REFLEX_PASS_BELOW=0.35
 REFLEX_SCAN_LIMIT=40
 ```
 
-Provider priority is automatic: **GLM → NVIDIA NIM → offline**. No keys at all? Set `REFLEX_OFFLINE=1` and the whole demo runs on scripted stand-ins.
+Provider priority is automatic: **OpenAI-compatible endpoint → NVIDIA NIM → offline**. No keys at all? Set `REFLEX_OFFLINE=1` and the whole demo runs on scripted stand-ins.
 
 ---
 
 ## Try it yourself
 
-**One click, no setup:** [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/syaikhipin/nemoclaw-demo) — the dashboard starts automatically in offline demo mode; add `GLM_API_KEY` / `EXA_API_KEY` as Codespaces secrets and rebuild for the live version.
+**One click, no setup:** [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/syaikhipin/nemoclaw-demo) — the dashboard starts automatically in offline demo mode; add `OPENAI_API_KEY` / `EXA_API_KEY` as Codespaces secrets and rebuild for the live version.
 
 **Or locally:**
 
@@ -144,7 +144,7 @@ bash nemoclaw/scripts/onboard.sh     # creates venv, installs dependencies, copi
 bash nemoclaw/scripts/install.sh     # trains the demo head, runs the test suite
 
 # web demo (the screenshots above)
-GLM_API_KEY=your-key EXA_API_KEY=your-key \
+OPENAI_API_KEY=your-key OPENAI_BASE_URL=https://api.openai.com/v1 EXA_API_KEY=your-key \
   .venv/bin/python -m reflex.web.app --port 8765
 # open http://localhost:8765
 ```
@@ -162,7 +162,7 @@ Your deal criteria live in `labeling-config.yaml` (EU market, margin-gap rubric)
 
 ## Under the hood (for the technical reader)
 
-**Stack:** NemoClaw recipe layout · OpenClaw skill + cron · GLM (z.ai) primary, Hermes via NVIDIA NIM next · LangChain Deep Agents harness (`create_deep_agent`, scout/judge/analyst subagents, 6+ tools) · Exa for supplier search · SQLite memory.
+**Stack:** NemoClaw recipe layout · OpenClaw skill + cron · OpenAI-compatible LLM primary, Hermes via NVIDIA NIM next · LangChain Deep Agents harness (`create_deep_agent`, scout/judge/analyst subagents, 6+ tools) · Exa for supplier search · SQLite memory.
 
 **Verified numbers** (held-out set, n=100): accuracy **0.91**, calibration error **0.079**, **97%** of products decided with zero LLM calls, p99 latency **42ms**. Test suite: **7/7 green.**
 
@@ -171,8 +171,8 @@ Your deal criteria live in `labeling-config.yaml` (EU market, margin-gap rubric)
 | Path | What |
 |---|---|
 | `reflex/system_one/` | The distilled head — `DecisionHead` protocol + calibrated reference model + teacher-distillation pipeline |
-| `reflex/system_two/` | Slow analyst (GLM → Hermes/NIM → offline fallback) |
-| `reflex/negotiation/` | Exa supplier search, GLM outreach drafts, simulated multi-round negotiation |
+| `reflex/system_two/` | Slow analyst (OpenAI-compatible → Hermes/NIM → offline fallback) |
+| `reflex/negotiation/` | Exa supplier search, LLM outreach drafts, simulated multi-round negotiation |
 | `reflex/deepagent/` | Deep-agents harness: model selection, tools, subagent prompts |
 | `reflex/serve/` | The long-running claw loop (scan → judge → escalate → digest) |
 | `reflex/noul.py` | Safety gate: talk allowed, money movement blocked |

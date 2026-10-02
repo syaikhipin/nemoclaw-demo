@@ -4,7 +4,7 @@ Run:  .venv/bin/python -m reflex.web.app --port 8765
 Then open http://localhost:8765 (or the tunnel URL).
 
 Sections: run a live triage cycle, browse the shortlist, test the Noul gate,
-chat with the deep agent (GLM), read the latest digest, see live metrics.
+chat with the deep agent (OpenAI-compatible LLM), read the latest digest, see live metrics.
 """
 
 from __future__ import annotations
@@ -22,7 +22,7 @@ from ..config import Settings
 from ..memory import Memory
 from ..sources import default_source
 
-_agent = None  # lazy deep agent (GLM)
+_agent = None  # lazy deep agent (OpenAI-compatible LLM)
 
 
 def get_agent(settings: Settings):

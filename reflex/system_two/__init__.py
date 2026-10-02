@@ -56,12 +56,12 @@ class SystemTwoAnalyst:
             else "offline-heuristic"
 
     def _providers(self):
-        """Yield (label, base_url, api_key, model) in priority order: GLM, then NIM."""
+        """Yield (label, base_url, api_key, model) in priority order: OpenAI-compatible, then NIM."""
         s = self.settings
         if s.offline:
             return
-        if s.glm_api_key:
-            yield ("glm", s.glm_base_url, s.glm_api_key, s.glm_model)
+        if s.openai_api_key:
+            yield ("openai", s.openai_base_url, s.openai_api_key, s.openai_model)
         if s.nvidia_api_key:
             yield ("nim", s.nim_base_url, s.nvidia_api_key, s.nim_model)
 
@@ -74,7 +74,7 @@ class SystemTwoAnalyst:
                 last_error = f"{label}_error: {exc}"
         return self._offline_analyze(product, note=last_error)
 
-    # -- OpenAI-compatible chat providers (GLM on z.ai, Hermes on NVIDIA NIM) --
+    # -- OpenAI-compatible chat providers (custom endpoint or NVIDIA NIM) --
     def _chat_analyze(self, product: Product, label: str,
                       base_url: str, api_key: str, model: str) -> Analysis:
         import json

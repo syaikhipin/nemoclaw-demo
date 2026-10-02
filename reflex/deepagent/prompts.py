@@ -22,7 +22,7 @@ NEGOTIATION PHASE (for shortlisted products, on request):
 7. SUPPLIERS: call find_suppliers to discover manufacturers/wholesalers via web search.
 8. OUTREACH: call draft_outreach to draft (never send) the first-contact message.
 9. SIMULATION: for a realistic preview, the web demo can run a simulated
-   multi-round negotiation (GLM roleplays the supplier). Label it simulated.
+   multi-round negotiation (the LLM roleplays the supplier). Label it simulated.
 
 Rules:
 - Never invent product data; only judge products returned by scan_products.

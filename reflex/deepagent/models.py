@@ -1,7 +1,7 @@
 """Chat-model selection for the deep agent.
 
-Provider priority: GLM on z.ai first, Hermes via NVIDIA NIM second,
-scripted offline stand-in last (REFLEX_OFFLINE=1).
+Provider priority: any OpenAI-compatible endpoint first, Hermes via
+NVIDIA NIM second, scripted offline stand-in last (REFLEX_OFFLINE=1).
 """
 
 from __future__ import annotations
@@ -62,12 +62,12 @@ def get_chat_model(settings: Settings | None = None) -> BaseChatModel:
     settings = settings or SETTINGS
     if settings.offline:
         return ScriptedDemoModel()
-    if settings.glm_api_key:
+    if settings.openai_api_key:
         from langchain_openai import ChatOpenAI
         return ChatOpenAI(
-            model=settings.glm_model,
-            base_url=settings.glm_base_url,
-            api_key=settings.glm_api_key,
+            model=settings.openai_model,
+            base_url=settings.openai_base_url,
+            api_key=settings.openai_api_key,
             temperature=0.2,
             max_tokens=2000,
         )
@@ -80,6 +80,6 @@ def get_chat_model(settings: Settings | None = None) -> BaseChatModel:
             temperature=0.2,
         )
     raise RuntimeError(
-        "No chat model configured. Set GLM_API_KEY (z.ai) or NVIDIA_API_KEY "
-        "(Hermes via NVIDIA NIM), or REFLEX_OFFLINE=1 for the scripted demo model."
+        "No chat model configured. Set OPENAI_API_KEY (+OPENAI_BASE_URL/+OPENAI_MODEL) "
+        "or NVIDIA_API_KEY (Hermes via NVIDIA NIM), or REFLEX_OFFLINE=1 for the scripted demo model."
     )
