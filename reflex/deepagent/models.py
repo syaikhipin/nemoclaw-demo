@@ -1,13 +1,12 @@
 """Chat-model selection for the deep agent.
 
-Production: Hermes 3 via NVIDIA NIM (build.nvidia.com, OpenAI-compatible).
-  Needs NVIDIA_API_KEY (free at build.nvidia.com).
-Offline/demo: a scripted deterministic stand-in so the harness, tools and
-  subagents can be exercised end-to-end with no network and no key.
+Provider priority: GLM on z.ai first, Hermes via NVIDIA NIM second,
+scripted offline stand-in last (REFLEX_OFFLINE=1).
 """
 
 from __future__ import annotations
 
+import os
 from typing import Any
 
 from langchain_core.language_models.chat_models import BaseChatModel
@@ -15,6 +14,14 @@ from langchain_core.messages import AIMessage, ToolMessage
 from langchain_core.outputs import ChatGeneration, ChatResult
 
 from ..config import Settings
+
+# This machine's NO_PROXY/no_proxy contain bracketed IPv6 literals ([::1], …)
+# which crash httpx's proxy parsing ("Invalid port: ':1]'"). Strip the
+# bracketed entries — localhost/127.0.0.1/::1 remain covered unbracketed.
+for _var in ("NO_PROXY", "no_proxy"):
+    _val = os.environ.get(_var, "")
+    if "[" in _val:
+        os.environ[_var] = ",".join(p for p in _val.split(",") if "[" not in p)
 
 
 class ScriptedDemoModel(BaseChatModel):
@@ -53,7 +60,18 @@ class ScriptedDemoModel(BaseChatModel):
 def get_chat_model(settings: Settings | None = None) -> BaseChatModel:
     from ..config import SETTINGS
     settings = settings or SETTINGS
-    if settings.has_nim:
+    if settings.offline:
+        return ScriptedDemoModel()
+    if settings.glm_api_key:
+        from langchain_openai import ChatOpenAI
+        return ChatOpenAI(
+            model=settings.glm_model,
+            base_url=settings.glm_base_url,
+            api_key=settings.glm_api_key,
+            temperature=0.2,
+            max_tokens=2000,
+        )
+    if settings.nvidia_api_key:
         from langchain_openai import ChatOpenAI
         return ChatOpenAI(
             model=settings.nim_model,
@@ -61,9 +79,7 @@ def get_chat_model(settings: Settings | None = None) -> BaseChatModel:
             api_key=settings.nvidia_api_key,
             temperature=0.2,
         )
-    if settings.offline:
-        return ScriptedDemoModel()
     raise RuntimeError(
-        "No chat model configured. Set NVIDIA_API_KEY (Hermes via NVIDIA NIM) "
-        "or REFLEX_OFFLINE=1 for the scripted demo model."
+        "No chat model configured. Set GLM_API_KEY (z.ai) or NVIDIA_API_KEY "
+        "(Hermes via NVIDIA NIM), or REFLEX_OFFLINE=1 for the scripted demo model."
     )

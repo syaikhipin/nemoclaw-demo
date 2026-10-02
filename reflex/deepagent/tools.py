@@ -31,9 +31,11 @@ def make_tools(settings: Settings | None = None):
         return SklearnHead.load(settings)
 
     @tool
-    def scan_products(limit: int = 20) -> str:
+    def scan_products(limit: int = 20, seed: int | None = None) -> str:
         """Scan the product source for fresh candidates. Returns JSON list of products."""
-        products = source.fetch(limit=settings.scan_limit if limit is None else limit)
+        import time as _time
+        src = MockCatalog(seed=seed if seed is not None else int(_time.time()) % 100000)
+        products = src.fetch(limit=settings.scan_limit if limit is None else limit)
         fresh = memory.unseen(products)
         memory.upsert_products(products)
         for p in fresh:

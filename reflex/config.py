@@ -18,6 +18,10 @@ class Settings:
     nvidia_api_key: str = os.environ.get("NVIDIA_API_KEY", "")
     nim_model: str = os.environ.get("NIM_MODEL", "nousresearch/hermes-3-llama-3.1-70b")
     nim_base_url: str = os.environ.get("NIM_BASE_URL", "https://integrate.api.nvidia.com/v1")
+    # GLM (z.ai) — primary LLM provider for now; NVIDIA NIM later.
+    glm_api_key: str = os.environ.get("GLM_API_KEY", "")
+    glm_base_url: str = os.environ.get("GLM_BASE_URL", "https://api.z.ai/api/coding/paas/v4")
+    glm_model: str = os.environ.get("GLM_MODEL", "glm-5.3-flash")
     shortlist_at: float = float(os.environ.get("REFLEX_SHORTLIST_AT", "0.65"))
     pass_below: float = float(os.environ.get("REFLEX_PASS_BELOW", "0.35"))
     scan_limit: int = int(os.environ.get("REFLEX_SCAN_LIMIT", "40"))
@@ -36,8 +40,21 @@ class Settings:
         self.digest_dir.mkdir(parents=True, exist_ok=True)
 
     @property
+    def has_glm(self) -> bool:
+        return bool(self.glm_api_key) and not self.offline
+
+    @property
     def has_nim(self) -> bool:
         return bool(self.nvidia_api_key) and not self.offline
+
+    @property
+    def llm_provider(self) -> str:
+        """Provider priority: GLM first, NVIDIA NIM later, offline last."""
+        if self.has_glm:
+            return f"glm:{self.glm_model}"
+        if self.has_nim:
+            return f"nim:{self.nim_model}"
+        return "offline"
 
 
 SETTINGS = Settings()

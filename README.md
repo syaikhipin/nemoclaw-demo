@@ -69,8 +69,26 @@ bash nemoclaw/scripts/install.sh    # trains demo head, runs tests
 .venv/bin/python -m scripts.run --forever --interval-hours 6  # the claw, 24/7
 ```
 
-With an NVIDIA key (`NVIDIA_API_KEY` in `.env`, free at build.nvidia.com),
-System Two uses Hermes 3 on NIM; without it, everything runs offline.
+With an LLM key in `.env`, System Two and the deep agent use it; without one,
+everything runs offline.
+
+| Provider | Env | Model |
+|---|---|---|
+| **GLM (z.ai)** — primary for now | `GLM_API_KEY` | `glm-5.3-flash` (`GLM_MODEL`, `GLM_BASE_URL`) |
+| **NVIDIA NIM** — later | `NVIDIA_API_KEY` | `nousresearch/hermes-3-llama-3.1-70b` |
+| Offline demo | `REFLEX_OFFLINE=1` | scripted stand-in (no network, no key) |
+
+## Web demo
+
+```bash
+GLM_API_KEY=... .venv/bin/python -m reflex.web.app --port 8765
+# open http://localhost:8765
+```
+
+The dashboard runs live triage cycles, shows the shortlist with P(sell) bars and
+System One / System Two badges, lets you test the Noul gate, chat with the deep
+agent (scout → judge → analyst subagents, powered by GLM), read the latest
+digest, and see the held-out eval metrics.
 
 Make it yours:
 ```bash

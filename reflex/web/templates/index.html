@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reflex — live triage demo</title>
+<style>
+  :root { --bg:#0e1116; --card:#171c24; --line:#263041; --txt:#e8edf3; --dim:#9aa7b8;
+          --acc:#76b900; --warn:#f0a500; --bad:#e5484d; --blue:#4da3ff; }
+  * { box-sizing:border-box; }
+  body { background:var(--bg); color:var(--txt); font-family:system-ui,-apple-system,sans-serif;
+         margin:0; padding:24px; max-width:1180px; margin-inline:auto; }
+  header { display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:8px; }
+  h1 { margin:0; font-size:28px; }
+  .sub { color:var(--dim); margin:4px 0 20px; }
+  .badge { font-size:12px; padding:4px 10px; border-radius:20px; border:1px solid var(--line); }
+  .badge.live { color:var(--acc); border-color:var(--acc); }
+  .badge.off { color:var(--warn); border-color:var(--warn); }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin:16px 0; }
+  .stat { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px 14px; }
+  .stat b { font-size:22px; display:block; }
+  .stat span { color:var(--dim); font-size:12px; }
+  .panel { background:var(--card); border:1px solid var(--line); border-radius:12px;
+           padding:18px; margin:16px 0; }
+  .panel h2 { margin:0 0 12px; font-size:18px; }
+  button { background:var(--acc); color:#0b0e03; border:0; border-radius:8px;
+           padding:10px 18px; font-weight:700; cursor:pointer; font-size:14px; }
+  button:disabled { opacity:.5; cursor:wait; }
+  button.ghost { background:transparent; color:var(--txt); border:1px solid var(--line); }
+  input[type=text] { background:#0e1116; border:1px solid var(--line); color:var(--txt);
+           border-radius:8px; padding:10px 12px; width:100%; font-size:14px; }
+  .cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:12px; }
+  .card { background:#0e1116; border:1px solid var(--line); border-radius:10px; padding:14px; }
+  .card h3 { margin:0 0 8px; font-size:15px; }
+  .meta { color:var(--dim); font-size:12px; margin-bottom:8px; }
+  .bar { height:8px; background:#263041; border-radius:4px; overflow:hidden; margin:6px 0; }
+  .bar i { display:block; height:100%; background:var(--acc); }
+  .via { font-size:11px; padding:2px 8px; border-radius:12px; margin-left:6px; }
+  .via.system_one { background:#1d2b12; color:var(--acc); }
+  .via.system_two { background:#12253d; color:var(--blue); }
+  .pill { font-size:11px; padding:2px 8px; border-radius:12px; }
+  .pill.shortlist { background:#1d2b12; color:var(--acc); }
+  .pill.pass { background:#2a2f37; color:var(--dim); }
+  .pill.research { background:#3d2f12; color:var(--warn); }
+  .row { display:flex; gap:10px; margin-top:10px; }
+  .row input { flex:1; }
+  #chatlog { max-height:320px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; margin-bottom:10px; }
+  .msg { padding:10px 12px; border-radius:10px; font-size:14px; max-width:90%; white-space:pre-wrap; }
+  .msg.you { background:#1c2735; align-self:flex-end; }
+  .msg.claw { background:#101820; border:1px solid var(--line); align-self:flex-start; }
+  .verdict-ok { color:var(--acc); font-weight:700; }
+  .verdict-no { color:var(--bad); font-weight:700; }
+  #digest h2,#digest h3 { margin:14px 0 6px; }
+  #digest p,#digest li { color:#cdd6e0; font-size:14px; }
+  .hint { color:var(--dim); font-size:12px; }
+  footer { color:var(--dim); font-size:12px; margin:28px 0 10px; text-align:center; }
+</style>
+</head>
+<body>
+<header>
+  <h1>⚡ Reflex</h1>
+  {% if offline %}
+    <span class="badge off">offline demo mode</span>
+  {% else %}
+    <span class="badge live">● {{ provider }} live</span>
+  {% endif %}
+  <span class="badge">NVIDIA Claw Agent Challenge — Barcelona</span>
+</header>
+<p class="sub">A personal System One decision model triages products in milliseconds;
+only the uncertain ones escalate to System Two. The Noul gate blocks money movement, always.</p>
+
+<div class="grid" id="stats">
+  <div class="stat"><b>{{ stats.products_seen }}</b><span>products seen</span></div>
+  <div class="stat"><b>{{ stats.judgments }}</b><span>judgments made</span></div>
+  <div class="stat"><b>{{ stats.labels }}</b><span>personal labels</span></div>
+  <div class="stat"><b>{{ stats.runs }}</b><span>cycles run</span></div>
+</div>
+
+<div class="panel">
+  <h2>1 · Run a live triage cycle</h2>
+  <button id="runBtn" onclick="runCycle()">▶ Run triage cycle</button>
+  <span class="hint" id="cycleStatus" style="margin-left:12px"></span>
+  <div class="cards" id="shortlist" style="margin-top:14px"></div>
+</div>
+
+<div class="panel">
+  <h2>2 · Ask the claw <span class="hint">(deep agent: scout → judge → analyst subagents)</span></h2>
+  <div id="chatlog"><div class="msg claw">Ask me anything — e.g. "scan for new products and tell me the top 3 you'd shortlist and why".</div></div>
+  <div class="row">
+    <input type="text" id="chatInput" placeholder="Type a message…" onkeydown="if(event.key==='Enter')sendChat()">
+    <button onclick="sendChat()">Send</button>
+  </div>
+</div>
+
+<div class="panel">
+  <h2>3 · Test the Noul safety gate</h2>
+  <div class="row">
+    <input type="text" id="noulInput" placeholder='Try: "place bulk order with supplier" or "publish triage digest"'>
+    <button class="ghost" onclick="testNoul()">Check</button>
+  </div>
+  <p id="noulOut" class="hint"></p>
+</div>
+
+<div class="panel">
+  <h2>4 · Latest digest</h2>
+  <div id="digest"><p class="hint">Run a cycle to generate one.</p></div>
+  <div style="margin-top:10px"><button class="ghost" onclick="loadDigest()">↻ Reload digest</button></div>
+</div>
+
+<footer>Reflex recommends; it never transacts. · System One = your distilled taste · System Two = {{ provider if not offline else "offline heuristic" }}</footer>
+
+<script>
+async function runCycle() {
+  const btn = document.getElementById('runBtn'), st = document.getElementById('cycleStatus');
+  btn.disabled = true; st.textContent = 'scanning → judging → escalating…';
+  try {
+    const r = await fetch('/api/cycle', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({limit: 24})});
+    const d = await r.json();
+    st.textContent = `done: ${d.n_scanned} scanned · ${d.n_shortlisted} shortlisted · ${d.n_escalated} escalated to System Two`;
+    const box = document.getElementById('shortlist'); box.innerHTML = '';
+    d.judgments.filter(j => j.choice === 'shortlist').slice(0, 12).forEach(j => {
+      const el = document.createElement('div'); el.className = 'card';
+      el.innerHTML = `<h3>${j.title}</h3>
+        <div class="meta">${j.category} · $${j.price_usd.toFixed(2)} · margin ${(j.margin*100).toFixed(0)}%</div>
+        <div class="bar"><i style="width:${(j.score*100).toFixed(0)}%"></i></div>
+        <div style="font-size:13px">P(sell) <b>${j.score.toFixed(2)}</b>
+          <span class="via ${j.decided_by}">${j.decided_by.replace('_',' ')}</span>
+          <span class="pill ${j.choice}">${j.choice}</span></div>
+        <div class="hint" style="margin-top:6px">${j.rationale.slice(0,140)}</div>`;
+      box.appendChild(el);
+    });
+    loadDigest();
+  } catch(e) { st.textContent = 'error: ' + e; }
+  btn.disabled = false;
+}
+async function testNoul() {
+  const action = document.getElementById('noulInput').value;
+  const r = await fetch('/api/noul', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({action})});
+  const d = await r.json();
+  document.getElementById('noulOut').innerHTML =
+    `<span class="${d.allowed ? 'verdict-ok' : 'verdict-no'}">${d.allowed ? 'ALLOWED' : 'BLOCKED'}</span> — ${d.reason}`;
+}
+async function sendChat() {
+  const inp = document.getElementById('chatInput'), log = document.getElementById('chatlog');
+  const text = inp.value.trim(); if (!text) return;
+  log.innerHTML += `<div class="msg you">${text}</div>`; inp.value = '';
+  const thinking = document.createElement('div'); thinking.className = 'msg claw'; thinking.textContent = '…';
+  log.appendChild(thinking); log.scrollTop = log.scrollHeight;
+  try {
+    const r = await fetch('/api/agent', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({message: text})});
+    const d = await r.json();
+    thinking.textContent = d.reply || ('error: ' + d.error);
+  } catch(e) { thinking.textContent = 'error: ' + e; }
+  log.scrollTop = log.scrollHeight;
+}
+async function loadDigest() {
+  const r = await fetch('/api/digest'); const d = await r.json();
+  document.getElementById('digest').innerHTML = d.html;
+}
+loadDigest();
+</script>
+</body>
+</html>

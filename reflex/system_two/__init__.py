@@ -52,25 +52,36 @@ class SystemTwoAnalyst:
         self.settings = settings or SETTINGS
 
     def describe(self) -> str:
-        if self.settings.has_nim:
-            return f"hermes/nim:{self.settings.nim_model}"
-        return "offline-heuristic"
+        return self.settings.llm_provider if self.settings.llm_provider != "offline" \
+            else "offline-heuristic"
+
+    def _providers(self):
+        """Yield (label, base_url, api_key, model) in priority order: GLM, then NIM."""
+        s = self.settings
+        if s.offline:
+            return
+        if s.glm_api_key:
+            yield ("glm", s.glm_base_url, s.glm_api_key, s.glm_model)
+        if s.nvidia_api_key:
+            yield ("nim", s.nim_base_url, s.nvidia_api_key, s.nim_model)
 
     def analyze(self, product: Product) -> Analysis:
-        if self.settings.has_nim:
+        last_error = ""
+        for label, base_url, api_key, model in self._providers():
             try:
-                return self._nim_analyze(product)
-            except Exception as exc:  # fail soft: never break the pipeline
-                return self._offline_analyze(product, note=f"nim_error: {exc}")
-        return self._offline_analyze(product)
+                return self._chat_analyze(product, label, base_url, api_key, model)
+            except Exception as exc:  # try next provider, never break the pipeline
+                last_error = f"{label}_error: {exc}"
+        return self._offline_analyze(product, note=last_error)
 
-    # -- NVIDIA NIM (Hermes) -------------------------------------------------
-    def _nim_analyze(self, product: Product) -> Analysis:
+    # -- OpenAI-compatible chat providers (GLM on z.ai, Hermes on NVIDIA NIM) --
+    def _chat_analyze(self, product: Product, label: str,
+                      base_url: str, api_key: str, model: str) -> Analysis:
         import json
         import urllib.request
 
         payload = {
-            "model": self.settings.nim_model,
+            "model": model,
             "messages": [
                 {"role": "system", "content": _SELLING_CRITERIA},
                 {"role": "user", "content": (
@@ -82,18 +93,28 @@ class SystemTwoAnalyst:
                     f"Supplier: {product.supplier}\nDescription: {product.description}")},
             ],
             "temperature": 0.2,
-            "max_tokens": 400,
+            # reasoning models spend tokens thinking — budget generously
+            "max_tokens": 4096,
         }
         req = urllib.request.Request(
-            self.settings.nim_base_url.rstrip("/") + "/chat/completions",
+            base_url.rstrip("/") + "/chat/completions",
             data=json.dumps(payload).encode(),
-            headers={"Authorization": f"Bearer {self.settings.nvidia_api_key}",
+            headers={"Authorization": f"Bearer {api_key}",
                      "Content-Type": "application/json"},
             method="POST",
         )
-        with urllib.request.urlopen(req, timeout=60) as resp:
+        with urllib.request.urlopen(req, timeout=120) as resp:
             body = json.load(resp)
-        text = body["choices"][0]["message"]["content"]
+        message = body["choices"][0]["message"]
+        text = message.get("content") or ""
+        if "{" not in text and message.get("reasoning_content"):
+            # last resort: the verdict sometimes lands in the thinking trace
+            text = message["reasoning_content"]
+        text = text.strip()
+        if text.startswith("```"):
+            text = text.strip("`").strip()
+            if text.startswith("json"):
+                text = text[4:].strip()
         data = json.loads(text[text.index("{"): text.rindex("}") + 1])
         return Analysis(product_id=product.id, score=float(data["score"]),
                         verdict=data["verdict"], summary=data["summary"],
