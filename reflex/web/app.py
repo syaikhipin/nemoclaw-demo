@@ -20,7 +20,7 @@ from flask import Flask, jsonify, render_template, request
 from .. import noul
 from ..config import Settings
 from ..memory import Memory
-from ..sources import AmazonFashionSource, default_source
+from ..sources import default_source
 
 _agent = None  # lazy deep agent (GLM)
 
@@ -81,10 +81,7 @@ def create_app(settings: Settings | None = None) -> Flask:
         limit = int(body.get("limit", 24))
         seed = int(time.time()) % 100000  # fresh products every demo run
         src = default_source()
-        if isinstance(src, AmazonFashionSource):
-            stats = run_cycle(settings, limit=limit, source=src, seed=seed)
-        else:
-            stats = run_cycle(settings, limit=limit, source=src)
+        stats = run_cycle(settings, limit=limit, source=src, seed=seed)
         stats["judgments"] = _recent_judgments(settings, limit=limit)
         return jsonify(stats)
 
@@ -191,7 +188,8 @@ def _recent_judgments(settings: Settings, limit: int = 50) -> list[dict]:
         rows = conn.execute(
             """SELECT j.product_id, j.choice, j.score, j.confidence, j.rationale,
                       j.decided_by, j.model_version, j.created,
-                      p.title, p.price_usd, p.cost_usd, p.url, p.category, p.image_url
+                      p.title, p.price_usd, p.cost_usd, p.url, p.category, p.image_url,
+                      p.source
                FROM judgments j JOIN products p ON p.id = j.product_id
                ORDER BY j.created DESC LIMIT ?""", (limit,)).fetchall()
     out = []

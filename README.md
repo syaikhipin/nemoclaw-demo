@@ -4,6 +4,7 @@
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/syaikhipin/nemoclaw-demo)
 &nbsp;·&nbsp; 🌐 **[Live site with animated demo →](https://syaikhipin.github.io/nemoclaw-demo/)**
+&nbsp;·&nbsp; 📊 **[Pitch deck (PDF) →](docs/reflex-pitch-deck.pdf)**
 
 **It watches what you search for, hunts the price gap between local sourcing and EU prices, and negotiates the deal.**
 
@@ -81,9 +82,11 @@ This session was real back-and-forth: supplier opened at $42.50/unit defending q
 
 ## Watch it work
 
-Real run, real Amazon products (fashion dataset), live in the browser demo:
+Real run, real dashboard — triage cycle on **v2 ID→EU pairs**, then a simulated negotiation (offline demo recording):
 
-**The hunt.** One click scans 24 products — 22 shortlisted, 1 escalated to System Two.
+![Demo: triage cycle + simulated negotiation on v2 ID→EU arbitrage pairs](docs/images/demo.gif)
+
+**The hunt.** One click scans the v2 pairs — each card shows the arbitrage: ID sourcing cost → EU price · margin multiple.
 
 ![Triage cycle results](demo-shots/shot2-shortlist.png)
 
@@ -182,7 +185,7 @@ Your deal criteria live in `labeling-config.yaml` (EU market, margin-gap rubric)
 | `scripts/` | `bootstrap`, `label`, `retrain`, `run`, `fetch_amazon_data` |
 | `eval/` | Held-out evaluation: accuracy, calibration, abstention, latency |
 
-**Product data:** real Amazon fashion products (the dataset behind [qdrant-labs/demo-ecommerce-search](https://github.com/qdrant-labs/demo-ecommerce-search), 40k-slice via `scripts/fetch_amazon_data.py`). Titles, prices, ratings, images are real; sourcing cost and shipping days are deterministic documented estimates.
+**Product data (v2):** `data/v2-arbitrage-pairs.jsonl` — 26 illustrative ID→EU deal pairs (ID sourcing cost vs EU retail, e.g. rattan tote ID $6.80 → EU $36.50). They are **plausible stand-ins**, not live marketplace listings: enough to train the head's margin-gap instinct and demo the full loop. Real marketplace adapters (ID marketplaces → EU retail feeds) plug in behind the same `ProductSource` interface. The Amazon fashion dataset is still available via `REFLEX_SOURCE=amazon` (40k-slice fetchable with `scripts/fetch_amazon_data.py`); `REFLEX_SOURCE=mock` gives the synthetic catalog.
 
 ---
 

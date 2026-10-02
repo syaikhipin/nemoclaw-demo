@@ -69,6 +69,18 @@ class Memory:
             seen = {r[0] for r in conn.execute("SELECT id FROM products")}
         return [p for p in products if p.id not in seen]
 
+    def unjudged(self, products: list[Product]) -> list[Product]:
+        """Products the System One head has not judged yet.
+
+        Training labels (bootstrap) upsert products without judging them,
+        so "seen" is the wrong filter for a triage cycle — this is the
+        right one.
+        """
+        with self._connect() as conn:
+            judged = {r[0] for r in
+                      conn.execute("SELECT DISTINCT product_id FROM judgments")}
+        return [p for p in products if p.id not in judged]
+
     # -- judgments -----------------------------------------------------------
     def record_judgments(self, judgments: list[Judgment]) -> None:
         now = time.time()

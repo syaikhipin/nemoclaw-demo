@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reflex — Pitch Deck · NVIDIA Claw Agent Challenge</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0d13;--panel:#12161f;--line:#232a38;--text:#e8ebf2;--muted:#9aa3b2;
+  --green:#4ade80;--amber:#fbbf24;--blue:#60a5fa;--red:#f87171}
+body{background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif}
+.slide{width:100vw;height:100vh;display:none;flex-direction:column;justify-content:center;
+  padding:70px 90px;position:relative;overflow:hidden;
+  background:radial-gradient(1100px 550px at 50% -10%,#14202e 0%,#0a0d13 62%)}
+.slide.active{display:flex}
+.slide .num{position:absolute;bottom:26px;right:40px;color:var(--muted);font-size:14px;font-family:ui-monospace,monospace}
+.slide .kick{font-size:14px;font-weight:800;letter-spacing:3px;color:var(--green);margin-bottom:16px}
+h1{font-size:64px;letter-spacing:-1px;line-height:1.08;margin-bottom:18px}
+h1 .grad{background:linear-gradient(90deg,var(--green),var(--amber));-webkit-background-clip:text;background-clip:text;color:transparent}
+h2{font-size:46px;letter-spacing:-.5px;line-height:1.15;margin-bottom:16px}
+p.big{font-size:24px;color:var(--muted);line-height:1.6;max-width:900px}
+p.big b{color:var(--text)}
+.tag{display:inline-block;font-size:14px;font-weight:800;letter-spacing:4px;color:var(--green);
+  border:1px solid rgba(74,222,128,.45);border-radius:999px;padding:10px 30px;margin-bottom:30px;background:rgba(74,222,128,.06)}
+img.diag{width:100%;max-height:52vh;object-fit:contain;border:1px solid var(--line);border-radius:14px;margin-top:24px;background:#0d1117}
+img.gif{width:100%;max-height:56vh;object-fit:contain;border:1px solid var(--line);border-radius:14px;margin-top:24px}
+.stats{display:flex;gap:18px;margin-top:36px}
+.stat{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:26px;text-align:center}
+.stat .n{font-size:44px;font-weight:800;color:var(--green)}
+.stat .l{font-size:15px;color:var(--muted);margin-top:8px}
+.acts{display:flex;gap:16px;margin-top:30px}
+.act{flex:1;border-radius:12px;padding:20px;font-size:17px}
+.act h3{font-size:20px;margin-bottom:8px;letter-spacing:1px}
+.act p{font-size:15px;color:var(--muted);line-height:1.55}
+.act.g{background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.4)}.act.g h3{color:var(--green)}
+.act.a{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.4)}.act.a h3{color:var(--amber)}
+.act.b{background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.4)}.act.b h3{color:var(--blue)}
+ul.win{list-style:none;margin-top:28px}
+ul.win li{font-size:23px;padding:14px 0;border-bottom:1px solid var(--line);color:var(--muted)}
+ul.win li b{color:var(--text)}
+ul.win li::before{content:"✓ ";color:var(--green);font-weight:800}
+.quote{font-size:34px;line-height:1.5;border-left:4px solid var(--green);padding-left:28px;margin-top:24px;color:var(--text);font-style:italic}
+.links{margin-top:34px;font-size:20px;color:var(--muted);line-height:2}
+.links b{color:var(--green);font-family:ui-monospace,monospace;font-weight:700}
+.hint{position:fixed;bottom:24px;left:40px;color:var(--muted);font-size:13px}
+@media print{
+  @page{size:1280px 720px;margin:0}
+  .slide{display:flex!important;width:1280px;height:720px;page-break-after:always;padding:56px 70px}
+  .hint,.num{display:none}
+  h1{font-size:56px}h2{font-size:40px}
+}
+</style>
+</head>
+<body>
+
+<div class="slide active">
+  <div class="tag">CLAW · DISTILL · HAGGLE</div>
+  <h1>⚡ Reflex<br><span class="grad">The agent that finds your<br>one winning product</span></h1>
+  <p class="big"><b>An arbitrage dropship recommender</b> — it watches what you search for, hunts the price gap between local sourcing and EU prices, and negotiates the deal.</p>
+  <p class="big" style="margin-top:18px">NVIDIA Claw Agent Challenge · Barcelona</p>
+  <div class="num">01 / 12</div>
+</div>
+
+<div class="slide">
+  <div class="kick">THE PROBLEM</div>
+  <h2>Sellers drown in products.<br>Generic AI doesn't know <span style="color:var(--green)">your</span> taste.</h2>
+  <p class="big">Thousands of products launch daily. Big sellers hire buyers to sift them. <b>Independent sellers scroll at midnight, alone.</b> And every AI judge gives the same generic answer to everyone — because it never learned <b>what <i>you</i> would buy</b>.</p>
+  <div class="num">02 / 12</div>
+</div>
+
+<div class="slide">
+  <div class="kick">THE INSIGHT</div>
+  <h2>Don't triage 2,000 products.<br>Find <span style="color:var(--amber)">the one</span> with the gap.</h2>
+  <div class="quote">The same leather tote: <b>$12</b> to source locally, <b>€45</b> in the EU.<br>That gap is a business — if you find it first.</div>
+  <p class="big" style="margin-top:22px">Reflex starts from <b>your top searches</b> — your niche, your edge — and hunts the single best risk-adjusted arbitrage.</p>
+  <div class="num">03 / 12</div>
+</div>
+
+<div class="slide">
+  <div class="kick" style="color:var(--green)">ACT I · CLAW</div>
+  <h2>Find the gap</h2>
+  <p class="big">The claw watches the market <b>24/7</b>: fresh candidates in, margin-gap math on every one — local cost vs EU price.</p>
+  <img class="diag" src="images/how-it-works.png" alt="How it works">
+  <div class="num">04 / 12</div>
+</div>
+
+<div class="slide">
+  <div class="kick" style="color:var(--amber)">ACT II · DISTILL</div>
+  <h2>Your taste, compressed</h2>
+  <p class="big"><b>Espresso from a pot of coffee.</b> A giant teacher model + <b>your</b> "would I work this deal?" labels → a tiny System One head. Your labels always beat the teacher's.</p>
+  <img class="diag" src="images/knowledge-distillation.png" alt="Knowledge distillation">
+  <div class="num">05 / 12</div>
+</div>
+
+<div class="slide">
+  <div class="kick" style="color:var(--amber)">SYSTEM ONE · DESIGNED LIKE JEV</div>
+  <h2>Types, not prose</h2>
+  <p class="big">Small models shouldn't ramble. Like Jev's typed heads, every verdict is <b>structured</b>: <span style="font-family:ui-monospace,monospace">shortlist / pass / research</span> + calibrated score + rationale — in <b>16 ms</b>, for <b>$0</b>.</p>
+  <img class="diag" src="images/system-one-design.png" alt="System One design">
+  <div class="num">06 / 12</div>
+</div>
+
+<div class="slide">
+  <div class="kick" style="color:var(--blue)">ACT III · HAGGLE</div>
+  <h2>Rehearse before you spend</h2>
+  <p class="big">Real supplier discovery, drafted outreach, <b>simulated</b> negotiation rounds — with the <b style="color:var(--red)">Noul gate</b> on the money: talk allowed, money blocked.</p>
+  <img class="diag" src="images/haggle.png" alt="Haggle">
+  <div class="num">07 / 12</div>
+</div>
+
+<div class="slide">
+  <div class="kick">PROOF · REAL RUN</div>
+  <h2>Watch it work</h2>
+  <p class="big">The live dashboard: triage cycle on <b>v2 ID→EU pairs</b>, then a simulated negotiation — $16.00 → $15.29, deal at 500 units. (Offline demo recording.)</p>
+  <img class="gif" src="images/demo.gif" alt="Demo recording">
+  <div class="num">08 / 12</div>
+</div>
+
+<div class="slide">
+  <div class="kick">NUMBERS</div>
+  <h2>Verified, not vibes</h2>
+  <div class="stats">
+    <div class="stat"><div class="n">0.91</div><div class="l">accuracy, held-out deals</div></div>
+    <div class="stat"><div class="n">16ms</div><div class="l">per judgment, System One</div></div>
+    <div class="stat"><div class="n">97%</div><div class="l">decided with zero LLM calls</div></div>
+    <div class="stat"><div class="n">9/9</div><div class="l">tests green</div></div>
+  </div>
+  <p class="big" style="margin-top:28px">Two-speed thinking: the <b>fast gut</b> screens thousands of candidates free — only the uncertain ~3% escalate to the <b>slow brain</b>.</p>
+  <div class="num">09 / 12</div>
+</div>
+
+<div class="slide">
+  <div class="kick" style="color:var(--red)">SAFETY</div>
+  <h2>Noul: recommends,<br>never transacts</h2>
+  <p class="big">The agent can <b>research, draft, and negotiate</b> — but it can <b>never move money</b> or commit funds without you. Verified live: <span style="font-family:ui-monospace,monospace">"place an order" → BLOCKED</span>, <span style="font-family:ui-monospace,monospace">"draft outreach" → ALLOWED</span>.</p>
+  <div class="num">10 / 12</div>
+</div>
+
+<div class="slide">
+  <div class="kick">WHY IT WINS</div>
+  <h2>Four moats</h2>
+  <ul class="win">
+    <li><b>Personal, not generic</b> — no two sellers get the same model; competitors can't download your taste</li>
+    <li><b>Long-running</b> — watches the market 24/7, digests daily, no babysitting (the challenge's real constraint)</li>
+    <li><b>Novel</b> — no published personal on-device decision model trained on one user's history</li>
+    <li><b>Honest economics</b> — 97% of decisions free; the expensive brain only verifies the one</li>
+  </ul>
+  <div class="num">11 / 12</div>
+</div>
+
+<div class="slide">
+  <div class="tag">CLAW · DISTILL · HAGGLE</div>
+  <h1>Find the gap.<br><span class="grad">Work the deal.</span></h1>
+  <div class="links">
+    🌐 <b>syaikhipin.github.io/nemoclaw-demo</b> — live site + animated demo<br>
+    💻 <b>github.com/syaikhipin/nemoclaw-demo</b> — source, 1-click Codespaces demo<br>
+    📦 <b>pitch deck</b> — you're reading it
+  </div>
+  <p class="big" style="margin-top:20px"><i>Reflex recommends; it never transacts.</i></p>
+  <div class="num">12 / 12</div>
+</div>
+
+<div class="hint">← → navigate · built for the NVIDIA Claw Agent Challenge</div>
+<script>
+const slides=[...document.querySelectorAll('.slide')];let i=0;
+function go(n){i=(n+slides.length)%slides.length;
+  slides.forEach((s,k)=>s.classList.toggle('active',k===i));
+  history.replaceState(null,'','#'+(i+1));}
+addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown')go(i+1);
+  if(e.key==='ArrowLeft'||e.key==='PageUp')go(i-1);
+  if(e.key==='Home')go(0);if(e.key==='End')go(slides.length-1);});
+const h=parseInt(location.hash.slice(1));if(h>=1&&h<=slides.length)go(h-1);
+let tx=null;
+addEventListener('touchstart',e=>tx=e.touches[0].clientX,{passive:true});
+addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-tx;
+  if(Math.abs(dx)>60)go(i+(dx<0?1:-1));},{passive:true});
+</script>
+</body>
+</html>

@@ -138,8 +138,11 @@ async function runCycle() {
     d.judgments.filter(j => j.choice === 'shortlist').slice(0, 12).forEach(j => {
       const el = document.createElement('div'); el.className = 'card';
       const img = j.image_url ? `<img src="${j.image_url}" loading="lazy" onerror="this.remove()">` : '';
+      const deal = j.source === 'v2-arbitrage'
+        ? `ID $${j.cost_usd.toFixed(2)} → EU $${j.price_usd.toFixed(2)} · ${(j.price_usd/j.cost_usd).toFixed(1)}×`
+        : `$${j.price_usd.toFixed(2)} · margin ${(j.margin*100).toFixed(0)}%`;
       el.innerHTML = `${img}<h3>${j.title}</h3>
-        <div class="meta">${j.category} · $${j.price_usd.toFixed(2)} · margin ${(j.margin*100).toFixed(0)}%</div>
+        <div class="meta">${j.category} · ${deal}</div>
         <div class="bar"><i style="width:${(j.score*100).toFixed(0)}%"></i></div>
         <div style="font-size:13px">P(sell) <b>${j.score.toFixed(2)}</b>
           <span class="via ${j.decided_by}">${j.decided_by.replace('_',' ')}</span>

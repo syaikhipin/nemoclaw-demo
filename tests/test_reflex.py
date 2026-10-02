@@ -129,3 +129,29 @@ def test_deep_agent_builds_and_runs_offline(tmp_path, monkeypatch):
                for m in messages)  # and the tool really executed
     mem = Memory(s)
     assert mem.stats()["products_seen"] > 0  # the tool really ran
+
+
+def test_v2_arbitrage_source_loads_pairs(tmp_path):
+    from reflex.sources.arbitrage_v2 import ArbitrageSource
+    src = ArbitrageSource()
+    assert len(src) >= 20
+    a = src.fetch(10, seed=42)
+    b = src.fetch(10, seed=42)
+    assert [p.id for p in a] == [p.id for p in b]  # deterministic seed
+    for p in a:
+        assert p.source == "v2-arbitrage"
+        assert p.price_usd > p.cost_usd > 0  # EU price above ID cost: the gap
+        assert p.margin > 0
+
+
+def test_v2_cycle_end_to_end(tmp_path):
+    from reflex.sources.arbitrage_v2 import ArbitrageSource
+    s = _settings(tmp_path)
+    products = ArbitrageSource().fetch(26, seed=7)
+    head, _ = train_from_labeled(products, _labels(products), s)
+    head.save()
+    stats = run_cycle(s, limit=20, source=ArbitrageSource(), seed=7)
+    assert stats["head_ready"] is True
+    assert stats["n_scanned"] == 20
+    assert stats["n_shortlisted"] + stats["n_passed"] + stats["n_research"] == 20
+    assert stats["noul_would_block_order"] is True

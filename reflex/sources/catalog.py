@@ -31,8 +31,8 @@ class MockCatalog(ProductSource):
         self.seed = seed
         self.size = size
 
-    def fetch(self, limit: int = 40) -> list[Product]:
-        rng = random.Random(self.seed)
+    def fetch(self, limit: int = 40, seed: int | None = None) -> list[Product]:
+        rng = random.Random(seed if seed is not None else self.seed)
         products: list[Product] = []
         cats = list(_CATEGORIES)
         for i in range(min(limit, self.size)):

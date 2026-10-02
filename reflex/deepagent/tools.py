@@ -18,7 +18,7 @@ from ..negotiation import draft_outreach as _draft_outreach
 from ..negotiation import find_suppliers as _find_suppliers
 from ..negotiation import record as _record_negotiation
 from ..schemas import Judgment
-from ..sources import AmazonFashionSource, default_source
+from ..sources import default_source
 from ..system_one import SklearnHead
 from ..system_two import SystemTwoAnalyst
 
@@ -39,12 +39,9 @@ def make_tools(settings: Settings | None = None):
         """Scan the product source for fresh candidates. Returns JSON list of products."""
         import time as _time
         _seed = seed if seed is not None else int(_time.time()) % 100000
-        if isinstance(source, AmazonFashionSource):
-            products = source.fetch(limit=settings.scan_limit if limit is None else limit,
-                                    seed=_seed)
-        else:
-            products = source.fetch(limit=settings.scan_limit if limit is None else limit)
-        fresh = memory.unseen(products)
+        products = source.fetch(limit=settings.scan_limit if limit is None else limit,
+                                seed=_seed)
+        fresh = memory.unjudged(products)
         memory.upsert_products(products)
         for p in fresh:
             registry[p.id] = p

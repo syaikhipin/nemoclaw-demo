@@ -36,7 +36,7 @@ def run_cycle(settings: Settings | None = None, limit: int | None = None,
         products = source.fetch(n, seed=seed)  # type: ignore[call-arg]
     except TypeError:
         products = source.fetch(n)
-    fresh = memory.unseen(products)
+    fresh = memory.unjudged(products)
     if not dry_run:
         memory.upsert_products(products)
 
