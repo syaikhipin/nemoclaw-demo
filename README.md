@@ -1,5 +1,8 @@
 # ⚡ Reflex — the agent that finds your one winning product
 
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/syaikhipin/nemoclaw-demo)
+&nbsp;·&nbsp; 🌐 **[Live site with animated demo →](https://syaikhipin.github.io/nemoclaw-demo/)**
+
 **It watches what you search for, hunts the price gap between local sourcing and EU prices, and negotiates the deal.**
 
 > *The same leather tote costs $12 to source locally and sells for €45 in the EU. That gap is a business — if you can find it before everyone else does. Reflex finds it, checks the math, and works the deal.*
@@ -89,6 +92,10 @@ Real run, real Amazon products (fashion dataset), live in the browser demo:
 ---
 
 ## Try it yourself
+
+**One click, no setup:** [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/syaikhipin/nemoclaw-demo) — the dashboard starts automatically in offline demo mode; add free `GLM_API_KEY` / `EXA_API_KEY` as Codespaces secrets and rebuild for the live version.
+
+**Or locally:**
 
 ```bash
 git clone https://github.com/syaikhipin/nemoclaw-demo.git && cd nemoclaw-demo

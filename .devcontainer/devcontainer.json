@@ -1,0 +1,1 @@
+{"customizations":{"vscode":{"extensions":["ms-python.python"]}},"forwardPorts":[8765],"image":"mcr.microsoft.com/devcontainers/python:3.11","name":"Reflex — NVIDIA Claw Agent Challenge","portsAttributes":{"8765":{"label":"Reflex demo dashboard","onAutoForward":"notify"}},"postCreateCommand":"bash .devcontainer/setup.sh","postStartCommand":"bash .devcontainer/start-demo.sh"}
