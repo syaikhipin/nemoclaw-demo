@@ -1,64 +1,68 @@
-# ⚡ Reflex — your taste, distilled into an AI buyer
+# ⚡ Reflex — the agent that finds your one winning product
 
-**A long-running claw agent that triages products the way *you* would — because it learned from your decisions.**
+**It watches what you search for, hunts the price gap between local sourcing and EU prices, and negotiates the deal.**
 
-> *An independent seller faces 2,000 new products a week and can seriously evaluate maybe 20. Reflex learns which 20 you'd pick, watches the feeds around the clock, and hands you a shortlist every morning — then helps you negotiate with suppliers.*
+> *The same leather tote costs $12 to source locally and sells for €45 in the EU. That gap is a business — if you can find it before everyone else does. Reflex finds it, checks the math, and works the deal.*
 
 Built for the **NVIDIA Claw Agent Challenge** (Barcelona).
 
 ---
 
-## The problem, in plain words
+## The idea, in plain words
 
-Selling online is a curation game. Thousands of products launch daily; winners are found by sifting. Big sellers hire buyers to do the sifting. Independent sellers do it at midnight, alone, scrolling until their eyes blur.
+Cross-border arbitrage is simple: **buy where it's cheap, sell where it's expensive.** The hard part was never the idea — it's the search. Thousands of products, shifting prices, suppliers to vet, deals to negotiate. One person can't watch it all.
 
-Generic AI doesn't fix this: it doesn't know **your** taste — your margins, your customers, your gut feeling about what sells. Ask ten sellers "would you sell this?" and you'll get ten different answers. Taste is personal. So we stopped trying to build a smarter generic judge, and built something else:
+So instead of asking you to triage 2,000 products, Reflex flips the job around:
 
-**A junior buyer who shadows you, learns your taste from your own past decisions, and then pre-screens everything — in milliseconds, for free.**
+1. **It starts from your top searches.** What you keep looking up is your edge — the niche you actually understand. The agent hunts there, not in generic "trending products" lists.
+2. **It scans for the gap.** For products in your space, it compares local sourcing cost against EU retail price and does the margin math.
+3. **It picks the one.** Not a list of fifty maybes — the single best risk-adjusted opportunity.
+4. **It works the deal.** Finds suppliers, drafts first outreach, and rehearses the negotiation against a simulated supplier — so you walk into the real conversation knowing your numbers.
+5. **It never spends your money.** Research, drafts, and simulated deals are all fair game; moving real money needs your explicit approval. *Reflex recommends; it never transacts.*
 
 ---
 
-## The novelty: a distilled System One model
+## The novelty: your deal criteria, distilled
 
 This is the heart of the entry, and it's easiest to understand through the human brain.
 
 ### Two speeds of thinking
 
-Psychologist Daniel Kahneman showed humans think in two systems: **System 1** — fast, instinctive, the gut feeling of an expert who has "seen this a thousand times" — and **System 2** — slow, deliberate, the careful analysis you do for hard calls.
+Psychologist Daniel Kahneman showed humans think in two systems: **System 1** — fast, instinctive, the gut feeling of an expert who has "seen this a thousand times" — and **System 2** — slow, deliberate, the careful analysis you do before committing money.
 
 Reflex works the same way:
 
 | | System One 🟢 | System Two 🔵 |
 |---|---|---|
-| **What** | Your distilled taste | A large AI analyst (GLM / Hermes) |
+| **What** | Your distilled deal instinct | A large AI analyst (GLM / Hermes) |
 | **Speed** | ~16 milliseconds | ~10–60 seconds |
 | **Cost** | Free, runs on your laptop | Paid API call |
-| **Handles** | ~97% of products | The ~3% uncertain ones |
+| **Handles** | Screening thousands of candidates | Verifying the one opportunity |
 
-The fast gut screens everything. Only the genuinely hard calls get escalated to the expensive brain. That's how you triage thousands of products without a thousand-dollar AI bill.
+The fast gut screens every candidate gap. Only the winner gets escalated to the expensive brain for verification. That's how you watch a whole market without a whole-market AI bill.
 
 ### "Distilled" — what does that actually mean?
 
 Think of it like making an espresso from a pot of coffee: you keep all the flavor, lose the volume.
 
-1. **You teach.** You answer one simple question — *"would I sell this?"* — a few hundred times (pilot) up to a few thousand (pro). That's the entire training program.
+1. **You teach.** You answer one simple question — *"would I work this deal?"* — a few hundred times. That's the entire training program.
 2. **A big AI assists** (the "teacher"). Before you've labeled enough, a large model drafts preliminary judgments so the system works on day one.
-3. **Your labels always win.** Wherever you and the teacher disagree, your verdict overrides. This is the crucial part: **the final model is a compressed copy of your judgment, not a smaller copy of the teacher.**
-4. **The result is tiny.** The distilled model is small enough to run on a laptop CPU, judging a product in ~16ms — about as fast as you blinking.
+3. **Your labels always win.** Wherever you and the teacher disagree, your verdict overrides. This is the crucial part: **the final model is a compressed copy of your judgment, not a smaller copy of the teacher.** Your margin floor, your risk appetite, the categories you trust — distilled into a model no bigger than a photo.
+4. **The result is tiny and fast.** It runs on a laptop CPU and judges a candidate in ~16ms — about as fast as you blinking.
 
 ### Why nobody else has this
 
-Product recommenders learn from *everyone's* clicks. Review scores aggregate *strangers'* opinions. Reflex learns from **one person's decisions: yours**. Your competitor can buy the same AI subscription you have — they cannot download your taste. In our literature review we found no published personal, on-device decision model trained on a single user's decision history. That's the gap this entry fills.
+Price trackers watch *everyone's* market. Review scores aggregate *strangers'* opinions. Reflex learns from **one person's deal history: yours**. Your competitor can buy the same AI subscription — they cannot download your taste in deals. In our literature review we found no published personal, on-device decision model trained on a single user's decision history. That's the gap this entry fills.
 
 ### Decisions you can audit
 
-Every judgment comes back **typed**, not as a rambling paragraph:
+Every verdict comes back **typed**, not as a rambling paragraph:
 
 - **Choice:** `shortlist` · `pass` · `research` (needs a closer look)
-- **Score:** a calibrated probability — "P(you'd sell this) = 0.94"
-- **Rationale:** which signals mattered most (margin, shipping speed, reviews…)
+- **Score:** a calibrated probability — "P(you'd work this deal) = 0.94"
+- **Rationale:** which signals mattered most (margin gap, shipping time, competition…)
 
-And the **Noul safety gate** sits in front of everything: the agent can research, draft, and negotiate — but it can never move money or commit funds without you. *Reflex recommends; it never transacts.*
+And the **Noul safety gate** sits in front of everything consequential: the agent can research, draft, and negotiate — but it can never move money or commit funds without you.
 
 ---
 
@@ -66,19 +70,21 @@ And the **Noul safety gate** sits in front of everything: the agent can research
 
 Real run, real Amazon products (fashion dataset), live in the browser demo:
 
-**1 · One click runs a triage cycle.** 24 products scanned, 22 shortlisted, 1 escalated to System Two for a closer look.
+**1 · The hunt.** One click scans 24 fresh products, shortlists 22, and escalates 1 to System Two for a closer look. This is the fast gut doing in seconds what used to take an evening of scrolling.
 
 ![Triage cycle results](demo-shots/shot2-shortlist.png)
 
-**2 · Pick a winner and enter the negotiation phase.** Supplier discovery searches the live web for manufacturers — here it found the brand's own storefront.
+**2 · The pick.** Each candidate gets a calibrated score — P(you'd work this deal) — with a System One/System Two badge showing which brain made the call.
+
+**3 · Working the deal.** For the winner, the agent searches the live web for suppliers — here it found the brand's own storefront — and drafts first-contact outreach. Drafts are never sent automatically.
 
 ![Supplier search and outreach draft](demo-shots/shot4-draft.png)
 
-**3 · The deal table.** The AI roleplays the supplier for multi-round negotiation. This session was real back-and-forth: supplier opened at $42.50/unit defending quality, your side anchored at $26.50 citing competing quotes, and they traded volume-for-price down to $38.25 vs $30.50. No deal — the gap was genuine, and the agent said so instead of inventing agreement.
+**4 · The negotiation table.** The AI roleplays the supplier for multi-round negotiation. This session was real back-and-forth: supplier opened at $42.50/unit defending quality, your side anchored at $26.50 citing competing quotes, and they traded volume-for-price down to $38.25 vs $30.50. No deal — the gap was genuine, and the agent said so instead of inventing agreement. That's the rehearsal before you spend a cent.
 
 ![Simulated negotiation transcript](demo-shots/shot5-simulation.png)
 
-**4 · Talk to the claw.** The deep agent (scout → judge → analyst subagents) takes plain-English instructions: *"scan 4 fresh products, judge them, find suppliers for your top pick and draft outreach."* It did — then noted, unprompted, that no money moved so no safety approval was needed.
+**5 · Talk to the claw.** The deep agent (scout → judge → analyst subagents) takes plain-English instructions: *"scan 4 fresh products, judge them, find suppliers for your top pick and draft outreach."* It did — then noted, unprompted, that no money moved so no safety approval was needed.
 
 ---
 
@@ -100,9 +106,11 @@ Keys are free: GLM at [z.ai](https://z.ai), Exa at [exa.ai](https://exa.ai). Wit
 Make it *yours* — this is where the magic happens:
 
 ```bash
-.venv/bin/python -m scripts.label      # "would I sell this?" — 300 for the pilot
+.venv/bin/python -m scripts.label      # "would I work this deal?" — 300 for the pilot
 .venv/bin/python -m scripts.retrain    # your labels always beat the teacher's
 ```
+
+Your deal criteria live in `labeling-config.yaml` (EU market, margin-gap rubric) — correct any line and it becomes v2.
 
 ---
 
@@ -137,7 +145,9 @@ Make it *yours* — this is where the magic happens:
 ## Honest limits
 
 - The demo head trains on a synthetic persona's labels; it becomes *personal* only after you label (~300 pilot, 1–3k for pro).
-- Negotiation drafts and simulations contact nobody and move no money — Noul blocks real transactions until you approve.
+- Ingesting your actual search history to seed the hunting ground is the design target; the current demo personalizes through your labels.
+- Sourcing costs in the demo are estimates, not supplier quotes — margin math is indicative until a real quote lands.
+- Negotiations are simulated rehearsals; Noul blocks real transactions until you approve.
 - The reference head is CPU-friendly by design (trains in seconds anywhere); the Qwen3-0.6B typed-head path (CLM primary, NanoJev baseline) is specified in `docs/clm-head.md` and swaps in via the `DecisionHead` protocol.
 
 ---
