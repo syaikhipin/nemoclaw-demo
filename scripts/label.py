@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from reflex.config import SETTINGS
 from reflex.memory import Memory
-from reflex.sources.catalog import MockCatalog
+from reflex.sources import default_source
 
 
 def main() -> None:
@@ -18,7 +18,7 @@ def main() -> None:
     memory = Memory(settings)
     labeled_ids = set(memory.get_labels())
 
-    products = [p for p in MockCatalog(seed=7, size=400).fetch(400)
+    products = [p for p in default_source().fetch(400)
                 if p.id not in labeled_ids]
     memory.upsert_products(products)
     print(f"[label] {len(labeled_ids)} already labeled, {len(products)} to go. "

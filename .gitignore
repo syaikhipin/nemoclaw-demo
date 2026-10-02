@@ -5,3 +5,4 @@ __pycache__/
 var/
 *.db
 .DS_Store
+data/amazon_fashion.jsonl

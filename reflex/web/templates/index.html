@@ -30,7 +30,8 @@
   input[type=text] { background:#0e1116; border:1px solid var(--line); color:var(--txt);
            border-radius:8px; padding:10px 12px; width:100%; font-size:14px; }
   .cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:12px; }
-  .card { background:#0e1116; border:1px solid var(--line); border-radius:10px; padding:14px; }
+  .card { background:#0e1116; border:1px solid var(--line); border-radius:10px; padding:14px; overflow:hidden; }
+  .card img { width:100%; height:170px; object-fit:cover; border-radius:8px; margin-bottom:10px; background:#1a212c; }
   .card h3 { margin:0 0 8px; font-size:15px; }
   .meta { color:var(--dim); font-size:12px; margin-bottom:8px; }
   .bar { height:8px; background:#263041; border-radius:4px; overflow:hidden; margin:6px 0; }
@@ -102,7 +103,22 @@ only the uncertain ones escalate to System Two. The Noul gate blocks money movem
 </div>
 
 <div class="panel">
-  <h2>4 · Latest digest</h2>
+  <h2>4 · Negotiation phase <span class="hint">(Exa supplier search → GLM outreach draft → simulated deal table)</span></h2>
+  <div class="row">
+    <input type="text" id="negProduct" placeholder="product id (e.g. amz-B09X1MRDN6) — or run a cycle first and use the top shortlist pick">
+    <button class="ghost" onclick="findSuppliers()">1 · Find suppliers</button>
+  </div>
+  <div id="suppliers" style="margin-top:10px"></div>
+  <div class="row">
+    <button class="ghost" id="draftBtn" onclick="draftOutreach()" disabled>2 · Draft outreach</button>
+    <button class="ghost" id="simBtn" onclick="simulateNeg()" disabled>3 · Simulate negotiation</button>
+    <span class="hint" id="negStatus" style="align-self:center"></span>
+  </div>
+  <div id="negOut" style="margin-top:10px"></div>
+</div>
+
+<div class="panel">
+  <h2>5 · Latest digest</h2>
   <div id="digest"><p class="hint">Run a cycle to generate one.</p></div>
   <div style="margin-top:10px"><button class="ghost" onclick="loadDigest()">↻ Reload digest</button></div>
 </div>
@@ -121,7 +137,8 @@ async function runCycle() {
     const box = document.getElementById('shortlist'); box.innerHTML = '';
     d.judgments.filter(j => j.choice === 'shortlist').slice(0, 12).forEach(j => {
       const el = document.createElement('div'); el.className = 'card';
-      el.innerHTML = `<h3>${j.title}</h3>
+      const img = j.image_url ? `<img src="${j.image_url}" loading="lazy" onerror="this.remove()">` : '';
+      el.innerHTML = `${img}<h3>${j.title}</h3>
         <div class="meta">${j.category} · $${j.price_usd.toFixed(2)} · margin ${(j.margin*100).toFixed(0)}%</div>
         <div class="bar"><i style="width:${(j.score*100).toFixed(0)}%"></i></div>
         <div style="font-size:13px">P(sell) <b>${j.score.toFixed(2)}</b>
@@ -161,6 +178,74 @@ async function loadDigest() {
   document.getElementById('digest').innerHTML = d.html;
 }
 loadDigest();
+
+// --- negotiation phase ---
+let negSupplier = null, negSuppliers = [];
+async function findSuppliers() {
+  const pid = document.getElementById('negProduct').value.trim();
+  const st = document.getElementById('negStatus'), box = document.getElementById('suppliers');
+  if (!pid) { st.textContent = 'enter a product id first'; return; }
+  st.textContent = 'searching suppliers via Exa…'; box.innerHTML = '';
+  negSupplier = null; negSuppliers = [];
+  document.getElementById('draftBtn').disabled = true;
+  document.getElementById('simBtn').disabled = true;
+  try {
+    const r = await fetch('/api/negotiate/suppliers', {method:'POST',
+      headers:{'Content-Type':'application/json'}, body: JSON.stringify({product_id: pid, n: 5})});
+    const d = await r.json();
+    if (d.error) { st.textContent = 'error: ' + d.error; return; }
+    negSuppliers = d.suppliers || [];
+    st.textContent = `found ${negSuppliers.length} via ${d.provider} — click one to select`;
+    negSuppliers.forEach((s, i) => {
+      const el = document.createElement('div');
+      el.className = 'msg claw'; el.style.cursor = 'pointer'; el.style.maxWidth = '100%';
+      el.innerHTML = `<b>${i+1}. ${s.title}</b><br><span class="hint">${s.url}</span><br>${(s.snippet||'').slice(0,160)}`;
+      el.onclick = () => {
+        negSupplier = s;
+        [...box.children].forEach(c => c.style.borderColor = '');
+        el.style.borderColor = 'var(--acc)';
+        document.getElementById('draftBtn').disabled = false;
+        document.getElementById('simBtn').disabled = false;
+        document.getElementById('negStatus').textContent = 'supplier selected: ' + s.title.slice(0,50);
+      };
+      box.appendChild(el);
+    });
+  } catch(e) { st.textContent = 'error: ' + e; }
+}
+async function draftOutreach() {
+  const pid = document.getElementById('negProduct').value.trim();
+  const st = document.getElementById('negStatus'), out = document.getElementById('negOut');
+  st.textContent = 'drafting outreach with GLM…';
+  const r = await fetch('/api/negotiate/draft', {method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({product_id: pid, supplier: negSupplier})});
+  const d = await r.json();
+  st.textContent = d.status || '';
+  out.innerHTML = `<div class="msg claw" style="max-width:100%"><b>Outreach draft</b> <span class="pill research">DRAFT — not sent</span><br><br>${d.draft.replace(/\n/g,'<br>')}</div>`;
+}
+async function simulateNeg() {
+  const pid = document.getElementById('negProduct').value.trim();
+  const st = document.getElementById('negStatus'), out = document.getElementById('negOut');
+  st.textContent = 'simulating negotiation rounds (GLM plays the supplier)… this takes ~1 min';
+  out.innerHTML = '';
+  try {
+    const r = await fetch('/api/negotiate/simulate', {method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({product_id: pid, supplier: negSupplier, rounds: 3})});
+    const d = await r.json();
+    if (d.error) { st.textContent = 'error: ' + d.error; return; }
+    st.textContent = d.status;
+    let html = '';
+    d.transcript.forEach(t => {
+      const who = t.role.includes('supplier') ? '🏭 supplier (simulated)' : '🧑 you (Reflex)';
+      const offer = t.offer && t.offer.offer_unit_price ? ` <span class="pill shortlist">offer: $${t.offer.offer_unit_price}/u · MOQ ${t.offer.offer_moq}</span>` : '';
+      html += `<div class="msg claw" style="max-width:100%"><b>${who}</b>${offer}<br>${t.message.replace(/\n/g,'<br>')}</div>`;
+    });
+    if (d.deal) html += `<div class="msg claw" style="max-width:100%;border-color:var(--acc)"><b>🤝 Proposed deal</b>: $${d.deal.unit_price}/unit · MOQ ${d.deal.moq} <span class="hint">(round ${d.deal.round}) — needs your approval; Noul still blocks any money movement.</span></div>`;
+    else html += `<div class="msg claw" style="max-width:100%"><b>No deal this round</b> — target was $${d.target_unit_price}/unit. Adjust and re-run.</div>`;
+    out.innerHTML = html;
+  } catch(e) { st.textContent = 'error: ' + e; }
+}
 </script>
 </body>
 </html>

@@ -14,8 +14,11 @@ from langchain_core.tools import tool
 from .. import noul
 from ..config import Settings
 from ..memory import Memory
+from ..negotiation import draft_outreach as _draft_outreach
+from ..negotiation import find_suppliers as _find_suppliers
+from ..negotiation import record as _record_negotiation
 from ..schemas import Judgment
-from ..sources.catalog import MockCatalog
+from ..sources import AmazonFashionSource, default_source
 from ..system_one import SklearnHead
 from ..system_two import SystemTwoAnalyst
 
@@ -24,8 +27,9 @@ def make_tools(settings: Settings | None = None):
     from ..config import SETTINGS
     settings = settings or SETTINGS
     memory = Memory(settings)
-    source = MockCatalog()
+    source = default_source()
     registry: dict[str, object] = {}
+    _suppliers: dict[str, dict] = {}
 
     def _head() -> SklearnHead:
         return SklearnHead.load(settings)
@@ -34,8 +38,12 @@ def make_tools(settings: Settings | None = None):
     def scan_products(limit: int = 20, seed: int | None = None) -> str:
         """Scan the product source for fresh candidates. Returns JSON list of products."""
         import time as _time
-        src = MockCatalog(seed=seed if seed is not None else int(_time.time()) % 100000)
-        products = src.fetch(limit=settings.scan_limit if limit is None else limit)
+        _seed = seed if seed is not None else int(_time.time()) % 100000
+        if isinstance(source, AmazonFashionSource):
+            products = source.fetch(limit=settings.scan_limit if limit is None else limit,
+                                    seed=_seed)
+        else:
+            products = source.fetch(limit=settings.scan_limit if limit is None else limit)
         fresh = memory.unseen(products)
         memory.upsert_products(products)
         for p in fresh:
@@ -90,6 +98,31 @@ def make_tools(settings: Settings | None = None):
                            "note": note, "status": "recorded"})
 
     @tool
+    def find_suppliers(product_id: str, n: int = 5) -> str:
+        """NEGOTIATION PHASE: web-search manufacturers/wholesalers for a shortlisted
+        product (Exa, SearXNG fallback). Returns JSON supplier candidates."""
+        product = registry.get(product_id)
+        if product is None:
+            return json.dumps({"error": f"unknown product {product_id}"})
+        result = _find_suppliers(product, settings, n=n)
+        for s in result["suppliers"]:
+            _suppliers[s["url"]] = s
+        return json.dumps(result)
+
+    @tool
+    def draft_outreach(product_id: str, supplier_url: str) -> str:
+        """NEGOTIATION PHASE: draft (never send) a first-contact message to a supplier
+        found by find_suppliers. Returns the draft as JSON."""
+        product = registry.get(product_id)
+        supplier = _suppliers.get(supplier_url)
+        if product is None or supplier is None:
+            return json.dumps({"error": "unknown product or supplier — run find_suppliers first"})
+        draft = _draft_outreach(product, supplier, settings)
+        _record_negotiation(memory.path, product_id, supplier,
+                            "draft", draft["status"], draft)
+        return json.dumps(draft)
+
+    @tool
     def write_digest() -> str:
         """Publish the markdown digest of the latest shortlist. Returns the path."""
         stats = memory.stats()
@@ -120,4 +153,5 @@ def make_tools(settings: Settings | None = None):
         return json.dumps({"digest_path": str(path), "n_shortlisted": len(rows)})
 
     return [scan_products, system_one_judge, deep_dive_analysis,
-            noul_gate, record_feedback, write_digest]
+            noul_gate, record_feedback, find_suppliers, draft_outreach,
+            write_digest]

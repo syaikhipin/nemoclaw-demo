@@ -19,7 +19,7 @@ _SCHEMA = """
 CREATE TABLE IF NOT EXISTS products (
     id TEXT PRIMARY KEY, title TEXT, category TEXT, price_usd REAL, cost_usd REAL,
     supplier TEXT, rating REAL, reviews INTEGER, shipping_days INTEGER,
-    description TEXT, url TEXT, source TEXT, first_seen REAL
+    description TEXT, url TEXT, image_url TEXT DEFAULT '', source TEXT, first_seen REAL
 );
 CREATE TABLE IF NOT EXISTS judgments (
     id INTEGER PRIMARY KEY AUTOINCREMENT, product_id TEXT, choice TEXT, score REAL,
@@ -55,12 +55,12 @@ class Memory:
             cur = conn.executemany(
                 """INSERT INTO products
                    (id,title,category,price_usd,cost_usd,supplier,rating,reviews,
-                    shipping_days,description,url,source,first_seen)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+                    shipping_days,description,url,image_url,source,first_seen)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                    ON CONFLICT(id) DO NOTHING""",
                 [(p.id, p.title, p.category, p.price_usd, p.cost_usd, p.supplier,
                   p.rating, p.reviews, p.shipping_days, p.description, p.url,
-                  p.source, now) for p in products],
+                  p.image_url, p.source, now) for p in products],
             )
             return cur.rowcount
 
@@ -104,7 +104,7 @@ class Memory:
             ).fetchall()
         cols = ["id", "title", "category", "price_usd", "cost_usd", "supplier",
                 "rating", "reviews", "shipping_days", "description", "url",
-                "source", "first_seen"]
+                "image_url", "source", "first_seen"]
         out = []
         for r in rows:
             d = dict(zip(cols, r[:-1]))

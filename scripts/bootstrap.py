@@ -14,7 +14,7 @@ from reflex import features as F
 from reflex.config import SETTINGS
 from reflex.memory import Memory
 from reflex.schemas import Product
-from reflex.sources.catalog import MockCatalog
+from reflex.sources import default_source
 from reflex.system_one.train import train_from_labeled
 
 PERSONA = (
@@ -38,8 +38,9 @@ def main() -> None:
     settings.ensure_dirs()
     rng = random.Random(42)
 
-    catalog = MockCatalog(seed=7, size=400)
+    catalog = default_source()
     products = catalog.fetch(400)
+    print(f"[bootstrap] source: {catalog.name} ({len(catalog)} products available)")
     memory = Memory(settings)
     memory.upsert_products(products)
 

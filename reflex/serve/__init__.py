@@ -17,20 +17,25 @@ from .. import noul
 from ..config import Settings
 from ..memory import Memory
 from ..schemas import Judgment
-from ..sources.catalog import MockCatalog
+from ..sources import ProductSource, default_source
 from ..system_one import SklearnHead
 from ..system_two import SystemTwoAnalyst
 
 
 def run_cycle(settings: Settings | None = None, limit: int | None = None,
-              dry_run: bool = False, source: MockCatalog | None = None) -> dict:
+              dry_run: bool = False, source: ProductSource | None = None,
+              seed: int | None = None) -> dict:
     from ..config import SETTINGS
     settings = settings or SETTINGS
     settings.ensure_dirs()
     memory = Memory(settings)
-    source = source or MockCatalog()
+    source = source or default_source()
 
-    products = source.fetch(limit or settings.scan_limit)
+    n = limit or settings.scan_limit
+    try:
+        products = source.fetch(n, seed=seed)  # type: ignore[call-arg]
+    except TypeError:
+        products = source.fetch(n)
     fresh = memory.unseen(products)
     if not dry_run:
         memory.upsert_products(products)

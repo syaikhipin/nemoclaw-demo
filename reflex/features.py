@@ -38,6 +38,9 @@ def extract(product: Product) -> dict[str, float]:
     }
     for cat in CATEGORIES:
         feats[f"cat_{cat}"] = 1.0 if product.category == cat else 0.0
+    # Real catalogs (e.g. Amazon fashion) have hundreds of leaf categories;
+    # anything outside the known buckets lands in cat_other.
+    feats["cat_other"] = 1.0 if product.category not in CATEGORIES else 0.0
     return feats
 
 

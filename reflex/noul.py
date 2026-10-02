@@ -1,9 +1,10 @@
-"""Noul — the safety gate. Blocks money movement, always.
+"""Noul — the safety gate.
 
-Any action that would move money, place an order, or commit the user to a
-seller is denied by default. The agent may *recommend*; it may never *transact*.
-The gate sits in front of the tool layer so neither System One, System Two,
-nor a subagent can route around it.
+Negotiation (researching suppliers, drafting outreach, simulated rounds) is
+ALLOWED: it moves no money. What stays blocked, always, is anything that
+moves funds or commits the owner: placing orders, paying, wiring money, or
+contacting a real supplier to close a deal. Drafts are drafts until the
+owner explicitly approves them.
 """
 
 from __future__ import annotations
@@ -12,10 +13,17 @@ import re
 
 from .schemas import NoulVerdict
 
+# Money movement / commitment — blocked.
 _BLOCKED = re.compile(
     r"\b(buy|purchase|order|checkout|pay|payment|transfer|wire|deposit|"
-    r"pre-?order|bulk (buy|order|deal)|negotiat\w* (price|deal|bulk)|"
-    r"send money|charge (my|the) card|place .*order)\b",
+    r"pre-?order|send money|charge (my|the) card|place .*order|"
+    r"close the deal|sign .*contract|send .*contract)\b",
+    re.IGNORECASE,
+)
+
+# Talking, drafting, simulating — allowed (no money moves).
+_ALLOWED_HINT = re.compile(
+    r"\b(draft|simulate|simulated|research|outreach draft|negotiat\w* (draft|simulat\w*|talk))\b",
     re.IGNORECASE,
 )
 
@@ -29,6 +37,9 @@ def check(action: str) -> NoulVerdict:
         return NoulVerdict(
             action=action, allowed=False,
             reason=("Noul safety gate: this action would move money or commit funds. "
-                    "Reflex recommends; it never transacts. Negotiation module is phase 2."),
+                    "Reflex drafts and negotiates; it never transacts without your approval."),
         )
-    return NoulVerdict(action=action, allowed=True, reason="no money movement detected")
+    reason = "no money movement detected"
+    if _ALLOWED_HINT.search(action):
+        reason = "negotiation talk/drafting allowed — no money moves"
+    return NoulVerdict(action=action, allowed=True, reason=reason)

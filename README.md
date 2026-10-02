@@ -32,6 +32,11 @@ Built for the **NVIDIA Claw Agent Challenge** (Barcelona) on the official stack:
                                    ▼
                           owner vets the shortlist,
                     feedback ──▶ becomes training data ──▶ head retrains
+
+  NEGOTIATION PHASE (on shortlisted products):
+  find_suppliers (Exa web search) → draft_outreach (GLM draft, never sent)
+  → simulate (GLM roleplays the supplier, multi-round) → proposed terms
+  ──▶ owner approves ──▶ Noul still blocks any money movement
 ```
 
 **The core idea:** dual-process triage. System One — a small model distilled
@@ -77,6 +82,19 @@ everything runs offline.
 | **GLM (z.ai)** — primary for now | `GLM_API_KEY` | `glm-5.3-flash` (`GLM_MODEL`, `GLM_BASE_URL`) |
 | **NVIDIA NIM** — later | `NVIDIA_API_KEY` | `nousresearch/hermes-3-llama-3.1-70b` |
 | Offline demo | `REFLEX_OFFLINE=1` | scripted stand-in (no network, no key) |
+
+**Product source:** real Amazon fashion products — the dataset behind
+[qdrant-labs/demo-ecommerce-search](https://github.com/qdrant-labs/demo-ecommerce-search)
+(McAuley-Lab/Amazon-Reviews-2023, 5.8M products; the demo streams a 40k slice).
+Fetch it with `.venv/bin/python -m scripts.fetch_amazon_data`. Titles, prices,
+ratings, images and categories are real; sourcing cost and shipping days are
+deterministic synthetic estimates (documented in `reflex/sources/amazon_fashion.py`).
+
+**Negotiation:** supplier discovery uses the **Exa API** (`EXA_API_KEY`;
+local SearXNG via `SEARXNG_URL` as fallback). The agent finds manufacturers,
+drafts outreach (never sent), and can run a simulated multi-round negotiation
+where GLM roleplays the supplier. Noul allows negotiation talk — it still
+blocks anything that moves money.
 
 ## Web demo
 
@@ -124,10 +142,12 @@ Make it yours:
    is something a person acts on every morning.
 
 ## Honest limits
-- Seed data is synthetic; swap in real labels + a real `ProductSource` before judging.
+- Seed labels are synthetic; swap in real labels via `scripts/label.py` before judging.
+- Amazon cost/shipping fields are deterministic estimates, not observed data.
+- Negotiation drafts and simulations move no money and contact nobody; Noul
+  blocks real transactions until the owner approves.
 - The reference head is sklearn-on-CPU by design (trains in seconds anywhere);
   the Qwen3-0.6B typed head path (CLM primary, NanoJev baseline) is specified in
   `docs/clm-head.md` and swaps in via the `DecisionHead` protocol.
-- Negotiation / ordering is phase 2 — Noul blocks it today.
 
 License: Apache-2.0

@@ -69,12 +69,19 @@ def test_distillation_prefers_human_labels(tmp_path):
     assert report["teacher"] == "offline-heuristic"
 
 
-def test_noul_blocks_money(tmp_path):
+def test_noul_blocks_money_but_allows_negotiation_talk(tmp_path):
+    # money movement / commitment — blocked
     assert not noul.check("place bulk order with supplier").allowed
-    assert not noul.check("negotiate price for 500 units").allowed
     assert not noul.check("pay the invoice").allowed
+    assert not noul.check("close the deal with supplier").allowed
+    assert not noul.check("send the contract to the supplier").allowed
+    # harmless actions — allowed
     assert noul.check("publish triage digest to owner").allowed
     assert noul.check("scan for new products").allowed
+    # negotiation talk (research, drafts, simulation) moves no money — allowed
+    assert noul.check("negotiate price for 500 units").allowed
+    assert noul.check("draft outreach to supplier").allowed
+    assert noul.check("simulate negotiation rounds").allowed
 
 
 def test_memory_roundtrip(tmp_path):
@@ -94,14 +101,15 @@ def test_run_cycle_end_to_end(tmp_path):
     products = _products(60)
     head, _ = train_from_labeled(products, _labels(products), s)
     head.save()
-    stats = run_cycle(s, limit=20)
+    from reflex.sources import MockCatalog
+    stats = run_cycle(s, limit=20, source=MockCatalog(seed=7, size=60))
     assert stats["head_ready"] is True
     assert stats["n_scanned"] == 20
     assert stats["n_shortlisted"] + stats["n_passed"] + stats["n_research"] == 20
     assert stats["noul_would_block_order"] is True
     assert stats["digest_path"].endswith(".md")
-    # second cycle sees nothing new
-    stats2 = run_cycle(s, limit=20)
+    # second cycle with the same seed sees nothing new
+    stats2 = run_cycle(s, limit=20, source=MockCatalog(seed=7, size=60))
     assert stats2["n_scanned"] == 0
 
 

@@ -22,6 +22,7 @@ class Product:
     shipping_days: int
     description: str
     url: str = ""
+    image_url: str = ""
     source: str = "catalog"
 
     @property
@@ -35,7 +36,8 @@ class Product:
     def from_dict(cls, d: dict) -> "Product":
         return cls(**{f: d.get(f, "") for f in
                       ("id", "title", "category", "price_usd", "cost_usd", "supplier",
-                       "rating", "reviews", "shipping_days", "description", "url", "source")})
+                       "rating", "reviews", "shipping_days", "description", "url",
+                       "image_url", "source")})
 
 
 @dataclass

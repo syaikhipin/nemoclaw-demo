@@ -20,7 +20,7 @@ from flask import Flask, jsonify, render_template, request
 from .. import noul
 from ..config import Settings
 from ..memory import Memory
-from ..sources.catalog import MockCatalog
+from ..sources import AmazonFashionSource, default_source
 
 _agent = None  # lazy deep agent (GLM)
 
@@ -80,8 +80,11 @@ def create_app(settings: Settings | None = None) -> Flask:
         body = request.get_json(force=True, silent=True) or {}
         limit = int(body.get("limit", 24))
         seed = int(time.time()) % 100000  # fresh products every demo run
-        stats = run_cycle(settings, limit=limit,
-                          source=MockCatalog(seed=seed, size=400))
+        src = default_source()
+        if isinstance(src, AmazonFashionSource):
+            stats = run_cycle(settings, limit=limit, source=src, seed=seed)
+        else:
+            stats = run_cycle(settings, limit=limit, source=src)
         stats["judgments"] = _recent_judgments(settings, limit=limit)
         return jsonify(stats)
 
@@ -119,6 +122,48 @@ def create_app(settings: Settings | None = None) -> Flask:
         verdict = noul.check(body.get("action", ""))
         return jsonify(verdict.to_dict())
 
+    # -- negotiation phase ---------------------------------------------------
+    @app.post("/api/negotiate/suppliers")
+    def negotiate_suppliers():
+        from ..negotiation import find_suppliers
+        body = request.get_json(force=True, silent=True) or {}
+        product = _get_product(settings, body.get("product_id", ""))
+        if product is None:
+            return jsonify({"error": "unknown product_id"}), 404
+        return jsonify(find_suppliers(product, settings,
+                                      n=int(body.get("n", 5))))
+
+    @app.post("/api/negotiate/draft")
+    def negotiate_draft():
+        from ..negotiation import draft_outreach, record
+        body = request.get_json(force=True, silent=True) or {}
+        product = _get_product(settings, body.get("product_id", ""))
+        supplier = body.get("supplier") or {}
+        if product is None or not supplier.get("url"):
+            return jsonify({"error": "need product_id and supplier"}), 400
+        draft = draft_outreach(product, supplier, settings)
+        record(Memory(settings).path, product.id, supplier,
+               "draft", draft["status"], draft)
+        return jsonify(draft)
+
+    @app.post("/api/negotiate/simulate")
+    def negotiate_simulate():
+        from ..negotiation import record, simulate
+        body = request.get_json(force=True, silent=True) or {}
+        product = _get_product(settings, body.get("product_id", ""))
+        supplier = body.get("supplier") or {}
+        if product is None or not supplier.get("url"):
+            return jsonify({"error": "need product_id and supplier"}), 400
+        target = float(body.get("target_unit_price") or product.cost_usd)
+        try:
+            result = simulate(product, supplier, target,
+                              rounds=int(body.get("rounds", 3)), settings=settings)
+        except Exception as exc:
+            return jsonify({"error": f"simulation failed: {exc}"}), 500
+        record(Memory(settings).path, product.id, supplier,
+               "simulation", result["status"], result)
+        return jsonify(result)
+
     @app.post("/api/agent")
     def agent_chat():
         body = request.get_json(force=True, silent=True) or {}
@@ -146,7 +191,7 @@ def _recent_judgments(settings: Settings, limit: int = 50) -> list[dict]:
         rows = conn.execute(
             """SELECT j.product_id, j.choice, j.score, j.confidence, j.rationale,
                       j.decided_by, j.model_version, j.created,
-                      p.title, p.price_usd, p.cost_usd, p.url, p.category
+                      p.title, p.price_usd, p.cost_usd, p.url, p.category, p.image_url
                FROM judgments j JOIN products p ON p.id = j.product_id
                ORDER BY j.created DESC LIMIT ?""", (limit,)).fetchall()
     out = []
@@ -163,6 +208,19 @@ def _note(mem: Memory, product_id: str) -> str:
         row = conn.execute("SELECT note FROM labels WHERE product_id=?",
                            (product_id,)).fetchone()
     return row[0] if row else ""
+
+
+def _get_product(settings: Settings, product_id: str):
+    from ..schemas import Product
+    mem = Memory(settings)
+    with sqlite3.connect(mem.path) as conn:
+        conn.row_factory = sqlite3.Row
+        row = conn.execute("SELECT * FROM products WHERE id=?", (product_id,)).fetchone()
+    if row is None:
+        return None
+    d = dict(row)
+    d.pop("first_seen", None)
+    return Product.from_dict(d)
 
 
 def main() -> None:
